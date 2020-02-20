@@ -14,6 +14,7 @@ defmodule Fsm.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
+      mod: {Leader, []},
       extra_applications: [:logger]
     ]
   end

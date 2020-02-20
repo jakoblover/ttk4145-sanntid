@@ -1,18 +1,17 @@
-defmodule Fsm do
-  @moduledoc """
-  Documentation for `Fsm`.
-  """
+# defmodule Fsm do
+#  use GenServer
+#  require driver_elixir
 
-  @doc """
-  Hello world.
+#  def start do
+#  {:ok, driver_pid} = Driver.start()
+#  end
 
-  ## Examples
+#  def statemachine() do
+#    case Driver.get_floor_sensor_state do
+#      1 -> Driver.set_motor_direction(driver_pid, :up)
+#      2 -> Driver.set_motor_direction(driver_pid, :down)
+#    end 
 
-      iex> Fsm.hello()
-      :world
+#   end
 
-  """
-  def hello do
-    :world
-  end
-end
+# end

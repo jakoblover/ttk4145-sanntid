@@ -1,9 +1,9 @@
-defmodule Fsm.MixProject do
+defmodule Elevator.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :fsm,
+      app: :elevator,
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
@@ -14,7 +14,6 @@ defmodule Fsm.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {Leader, []},
       extra_applications: [:logger]
     ]
   end

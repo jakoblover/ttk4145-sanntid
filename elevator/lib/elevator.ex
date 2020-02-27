@@ -1,18 +1,8 @@
-defmodule Elevator do
-  @moduledoc """
-  Documentation for `Elevator`.
-  """
+# defmodule Elevator do
+#   @moduledoc """
+#   Documentation for `Elevator`.
+#   """
+#   use GenStateMachine
+#   def init(state), do: {:ok, state}
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Elevator.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
-end
+# end

@@ -12,4 +12,3 @@ defmodule Elevator do
     Elevator.Supervisor.start_link(name: Elevator.Supervisor)
   end
 end
-

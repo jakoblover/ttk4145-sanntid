@@ -1,14 +1,16 @@
 defmodule ElevatorFSM do
   use GenStateMachine, callback_mode: :state_functions
+  require Driver
 
   # data = [at_floor,stop_btn,moving,door_open]
   # Start the server
-  def start_link do
+  def start_link([]) do
     {:ok, pid} = GenStateMachine.start_link(ElevatorFSM, {:idle, [1, 0, 0, 0]}, name: __MODULE__)
   end
 
-  def idle(:cast, :moving, data) do
+  def idle(:cast, :up, data) do
     IO.inspect("Starting movement")
+    Driver.set_motor_direction(:up)
     {:next_state, :moving_past_floor, data}
   end
 
@@ -47,8 +49,12 @@ defmodule ElevatorFSM do
     {:next_state, :moving_past_floor, data}
   end
 
-  def move do
-    GenStateMachine.cast(__MODULE__, :moving)
+  def move_up do
+    GenStateMachine.cast(__MODULE__, :up)
+  end
+
+  def move_down do
+    GenStateMachine.cast(__MODULE__, :down)
   end
 
   def at_floor do

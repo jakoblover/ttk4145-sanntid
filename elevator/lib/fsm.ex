@@ -2,14 +2,18 @@ defmodule ElevatorFSM do
   use GenStateMachine, callback_mode: [:state_functions, :state_enter]
   require Driver
 
-  # data = {floor, [orders]}
+  # data = {floor, [{order_floor, order_type}]}
   # Start the server
   def start_link([]) do
+    :dets.open_file(:disk_storage, type: :set)
+    :dets.insert(:disk_storage, {:elev, [{3, :hall_up}, {1, :cab}, {2, :hall_down}]})
+
     {:ok, _pid} =
       GenStateMachine.start_link(
         ElevatorFSM,
         {:at_floor,
-         {Driver.get_floor_sensor_state(), [{3, :hall_up}, {1, :hall_down}, {2, :cab}]}},
+         {Driver.get_floor_sensor_state(),
+          elem(Enum.at(:dets.lookup(:disk_storage, :elev), 0), 1)}},
         name: __MODULE__
       )
   end
@@ -79,6 +83,7 @@ defmodule ElevatorFSM do
     floor = elem(data, 0)
     orders = new_orders
     data = {floor, orders}
+    :dets.insert(:disk_storage, {:elev, orders})
     {:repeat_state, data}
   end
 
@@ -104,6 +109,7 @@ defmodule ElevatorFSM do
     floor = elem(data, 0)
     orders = new_orders
     data = {floor, orders}
+    :dets.insert(:disk_storage, {:elev, orders})
     {:keep_state, data, [{:state_timeout, 100, :door_open}]}
   end
 
@@ -132,6 +138,7 @@ defmodule ElevatorFSM do
     floor = elem(data, 0)
     orders = new_orders
     data = {floor, orders}
+    :dets.insert(:disk_storage, {:elev, orders})
     {:keep_state, data, [{:state_timeout, 100, :at_floor}]}
   end
 
@@ -163,6 +170,7 @@ defmodule ElevatorFSM do
     floor = elem(data, 0)
     orders = new_orders
     data = {floor, orders}
+    :dets.insert(:disk_storage, {:elev, orders})
     {:keep_state, data, [{:state_timeout, 100, :between_floors}]}
   end
 
@@ -170,23 +178,23 @@ defmodule ElevatorFSM do
     GenStateMachine.cast(__MODULE__, {:update_orders, new_orders})
   end
 
-  def move_up do
+  defp move_up do
     GenStateMachine.cast(__MODULE__, :up)
   end
 
-  def move_down do
+  defp move_down do
     GenStateMachine.cast(__MODULE__, :down)
   end
 
-  def at_floor do
+  defp at_floor do
     GenStateMachine.cast(__MODULE__, :at_floor)
   end
 
-  def not_at_floor do
+  defp not_at_floor do
     GenStateMachine.cast(__MODULE__, :not_at_floor)
   end
 
-  def open_door do
+  defp open_door do
     GenStateMachine.cast(__MODULE__, :open_door)
   end
 end

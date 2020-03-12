@@ -20,22 +20,29 @@ defmodule ElevatorFSM do
 
   def at_floor(:enter, _, data) do
     floor = elem(data, 0)
-    orders = elem(data, 1)
+    # orders = elem(data, 1)
     Driver.set_floor_indicator(floor)
     IO.inspect("Entering at_floor mode")
     IO.inspect("Checking for orders")
+    orders = OrderHandler.get_orders()
+    data = {floor, orders}
     IO.inspect(orders, label: "The current orders are")
     IO.inspect("Current floor is #{floor}")
 
     if length(orders) > 0 do
       IO.inspect("Executing order")
       [head | _tail] = orders
+      IO.inspect(head, label: "The head is")
       current_order = elem(head, 0)
+      IO.inspect(current_order, label: "The current order is")
       current_order_direction = elem(head, 1)
+      IO.inspect(current_order_direction, label: "The current order direction is")
 
       cond do
         floor == current_order ->
+          IO.inspect("Turning off order light in elevator direction")
           Driver.set_order_button_light(current_order_direction, floor, :off)
+          IO.inspect("Stopping the motor")
           Driver.set_motor_direction(:stop)
           open_door()
 
@@ -49,7 +56,7 @@ defmodule ElevatorFSM do
       IO.inspect("Waiting for new orders")
     end
 
-    {:keep_state_and_data, [{:state_timeout, 1000, :waiting_for_orders}]}
+    {:keep_state, data, [{:state_timeout, 1000, :waiting_for_orders}]}
   end
 
   def at_floor(:state_timeout, :waiting_for_orders, _data) do
@@ -93,6 +100,7 @@ defmodule ElevatorFSM do
     Process.sleep(3000)
     IO.inspect("Closing doors")
     Driver.set_door_open_light(:off)
+    OrderHandler.order_handeled()
     at_floor()
     :keep_state_and_data
   end
@@ -115,7 +123,10 @@ defmodule ElevatorFSM do
 
   def moving_past_floor(:enter, _, _data) do
     IO.inspect("I am moving past a floor")
+    IO.inspect("Checking for orders")
+    orders = OrderHandler.get_orders()
     floor = Driver.get_floor_sensor_state()
+    data = {floor, orders}
 
     if floor == :between_floors do
       IO.inspect("Between floors")
@@ -123,7 +134,7 @@ defmodule ElevatorFSM do
     end
 
     IO.inspect("Current floor is #{floor}")
-    {:keep_state_and_data, [{:state_timeout, 100, :at_floor}]}
+    {:keep_state, data, [{:state_timeout, 100, :at_floor}]}
   end
 
   def moving_past_floor(:state_timeout, :at_floor, _data) do
@@ -144,7 +155,10 @@ defmodule ElevatorFSM do
 
   def moving_between_floors(:enter, _, _data) do
     IO.inspect("I am moving between floors")
+    IO.inspect("Checking for orders")
+    orders = OrderHandler.get_orders()
     floor = Driver.get_floor_sensor_state()
+    data = {floor, orders}
 
     if floor != :between_floors do
       IO.inspect("I have arrived at a floor")
@@ -152,7 +166,7 @@ defmodule ElevatorFSM do
     end
 
     IO.inspect("Current floor is #{floor}")
-    {:keep_state_and_data, [{:state_timeout, 100, :between_floors}]}
+    {:keep_state, data, [{:state_timeout, 100, :between_floors}]}
   end
 
   def moving_between_floors(:state_timeout, :between_floors, _data) do

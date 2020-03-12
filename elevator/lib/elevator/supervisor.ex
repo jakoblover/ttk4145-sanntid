@@ -10,7 +10,7 @@ defmodule Elevator.Supervisor do
     children = [
       Driver,
       Poller,
-      # ElevatorFSM,
+      ElevatorFSM,
       OrderHandler
     ]
 

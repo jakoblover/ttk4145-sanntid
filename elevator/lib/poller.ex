@@ -1,3 +1,16 @@
+defmodule PollerServer do
+  use GenServer
+
+  def init([]) do
+    {:ok}
+  end
+
+  def button_pressed(order) do
+    nil
+    # GenServer.cast(, :add_request, order.floor, order.order_type)
+  end
+end
+
 defmodule Poller do
   use Supervisor
 
@@ -28,12 +41,8 @@ defmodule ButtonPoller do
   use Task, restart: :permanent
   @poll_delay 200
 
-  def start_link([]) do
-    IO.puts("lol no")
-  end
-
   def start_link(order = %Order{}) do
-    IO.puts("Polling button")
+    IO.puts("Starting poller for floor button #{order.floor} of type #{order.order_type}")
     Task.start_link(__MODULE__, :poll, [order, 0])
   end
 
@@ -41,11 +50,22 @@ defmodule ButtonPoller do
     receive do
     after
       @poll_delay ->
-        if Driver.get_order_button_state(order.floor, order.order_type) == 1 do
-          IO.puts("Pressed button")
-        end
+        with sensor_state <- Driver.get_order_button_state(order.floor, order.order_type) do
+          cond do
+            Driver.get_order_button_state(order.floor, order.order_type) == 1 and prev_state == 0 ->
+              IO.puts("Pressed button #{} type: #{order.order_type}")
+              PollerServer.button_pressed(order)
 
-        poll(order, prev_state)
+            Driver.get_order_button_state(order.floor, order.order_type) == 0 and prev_state == 1 ->
+              IO.puts("Released button")
+
+            true ->
+              nil
+              # Nothing interesting happens
+          end
+
+          poll(order, sensor_state)
+        end
     end
   end
 end

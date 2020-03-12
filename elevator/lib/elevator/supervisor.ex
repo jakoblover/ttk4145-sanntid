@@ -10,7 +10,8 @@ defmodule Elevator.Supervisor do
     children = [
       Driver,
       Poller,
-      ElevatorFSM
+      # ElevatorFSM,
+      OrderHandler
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

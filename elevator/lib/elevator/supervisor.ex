@@ -12,6 +12,7 @@ defmodule Elevator.Supervisor do
       Poller,
       # ElevatorFSM,
       OrderHandler
+      # {Watchdog, {6800, "heis"}}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

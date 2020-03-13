@@ -15,16 +15,20 @@ defmodule OrderHandler do
     orders = orders ++ [order]
     IO.inspect(orders, label: "The current orders are")
     data = {orders, requests}
+    Watchdog.new_request(order)
+    ElevatorFSM.update_orders(orders)
     {:noreply, data}
   end
 
   def handle_cast(:delete_order, data) do
     orders = elem(data, 0)
     requests = elem(data, 1)
+    removed_order = hd(orders)
     orders = tl(orders)
     IO.inspect(orders, label: "The new orders are")
     data = {orders, requests}
-    # Tell watchdog to clear order
+    IO.inspect(removed_order, label: "Removed order")
+    Watchdog.order_handled(removed_order)
     {:noreply, data}
   end
 
@@ -34,7 +38,7 @@ defmodule OrderHandler do
     requests = requests ++ [request]
     IO.inspect(requests, label: "The current requests are")
     data = {orders, requests}
-    # Tell watchdog to add request
+    Watchdog.new_request(request)
     # Send request to bid handler
     {:noreply, data}
   end
@@ -45,7 +49,6 @@ defmodule OrderHandler do
     requests = tl(requests)
     IO.inspect(requests, label: "The new requests are")
     data = {orders, requests}
-    # Tell watchdog to clear request
     {:noreply, data}
   end
 
@@ -57,7 +60,7 @@ defmodule OrderHandler do
     {:reply, orders, data}
   end
 
-  def order_handeled() do
+  def order_handled() do
     GenServer.cast(__MODULE__, :delete_order)
   end
 
@@ -73,7 +76,7 @@ defmodule OrderHandler do
     GenServer.cast(__MODULE__, {:add_request, request})
   end
 
-  def bid_handeled() do
+  def bid_handled() do
     GenServer.cast(__MODULE__, :delete_request)
   end
 end

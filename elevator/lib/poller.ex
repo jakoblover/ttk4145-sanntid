@@ -10,7 +10,7 @@ defmodule PollerServer do
 
   def button_pressed(order) do
     IO.puts "button_pressed"
-    OrderHandler.add_request({order.floor,order.order_type})
+    OrderHandler.new_order(order)
   end
 end
 

@@ -33,9 +33,9 @@ defmodule ElevatorFSM do
       IO.inspect("Executing order")
       [head | _tail] = orders
       IO.inspect(head, label: "The head is")
-      current_order = elem(head, 0)
+      current_order = head.floor
       IO.inspect(current_order, label: "The current order is")
-      current_order_direction = elem(head, 1)
+      current_order_direction = head.order_type
       IO.inspect(current_order_direction, label: "The current order direction is")
 
       cond do

@@ -1,13 +1,16 @@
+# TODO:
+# Prevent a button hold from sending out 10000 messages, fix the state change logic
+
 defmodule PollerServer do
   use GenServer
 
   def init([]) do
-    {:ok}
+    {:ok, {[]}}
   end
 
   def button_pressed(order) do
-    nil
-    # GenServer.cast(, :add_request, order.floor, order.order_type)
+    IO.puts "button_pressed"
+    OrderHandler.add_request({order.floor,order.order_type})
   end
 end
 

@@ -1,59 +1,112 @@
 defmodule ElevatorFSM do
   use GenStateMachine, callback_mode: [:state_functions, :state_enter]
   require Driver
-
+  @top 3
+  @bottom 0
   # data = {floor, [{order_floor, order_type}]}
   # Start the server
   def start_link([]) do
-    :dets.open_file(:disk_storage, type: :set)
-    :dets.insert(:disk_storage, {:elev, [{3, :hall_up}, {1, :cab}, {2, :hall_down}]})
+    IO.puts("I am booting")
+    Process.sleep(500)
+    Counter.set(0)
 
     {:ok, _pid} =
       GenStateMachine.start_link(
         ElevatorFSM,
-        {:at_floor,
-         {Driver.get_floor_sensor_state(),
-          elem(Enum.at(:dets.lookup(:disk_storage, :elev), 0), 1)}},
+        {:at_floor, {Driver.get_floor_sensor_state(), []}},
         name: __MODULE__
       )
   end
 
   def at_floor(:enter, _, data) do
     floor = elem(data, 0)
-    # orders = elem(data, 1)
+    # IO.inspect(floor)ast mon
     Driver.set_floor_indicator(floor)
-    IO.inspect("Entering at_floor mode")
-    IO.inspect("Checking for orders")
     orders = OrderHandler.get_orders()
     data = {floor, orders}
-    IO.inspect(orders, label: "The current orders are")
-    IO.inspect("Current floor is #{floor}")
+    prev_dir = Direction.get()
 
-    if length(orders) > 0 do
-      IO.inspect("Executing order")
-      [head | _tail] = orders
-      IO.inspect(head, label: "The head is")
-      current_order = head.floor
-      IO.inspect(current_order, label: "The current order is")
-      current_order_direction = head.order_type
-      IO.inspect(current_order_direction, label: "The current order direction is")
-
+    if floor == :between_floors do
       cond do
-        floor == current_order ->
-          IO.inspect("Turning off order light in elevator direction")
-          Driver.set_order_button_light(current_order_direction, floor, :off)
-          IO.inspect("Stopping the motor")
-          Driver.set_motor_direction(:stop)
-          open_door()
-
-        floor < current_order ->
+        prev_dir == :up ->
           move_up()
 
-        floor > current_order ->
+        prev_dir == :down ->
           move_down()
+
+        true ->
+          IO.puts("No previous direction, defaulting to up")
+          move_up()
       end
     else
-      IO.inspect("Waiting for new orders")
+      # IO.inspect("Entering at_floor mode")
+      # IO.inspect("Checking for orders")
+
+      # IO.inspect(orders, label: "The current orders are")
+      # IO.inspect("Current floor is #{floor}")
+
+      if length(orders) > 0 do
+        IO.inspect("Executing order")
+
+        for x <- 0..(length(orders) - 1) do
+          order = elem(Enum.fetch(orders, x), 1)
+          order_floor = elem(order, 0)
+          order_direction = elem(order, 1)
+
+          #  IO.inspect(order_floor, label: "Order_floor is")
+          #  IO.inspect(order_direction, label: "Order_direction is")
+
+          cond do
+            floor == order_floor && order_direction == :cab ->
+              Driver.set_order_button_light(order_direction, floor, :off)
+              Driver.set_motor_direction(:stop)
+              open_door(order)
+
+            floor == order_floor &&
+              (prev_dir == :down or prev_dir == :stop or order_floor == @top) &&
+                order_direction == :hall_down ->
+              Driver.set_order_button_light(order_direction, floor, :off)
+              Driver.set_motor_direction(:stop)
+              open_door(order)
+
+            floor == order_floor &&
+              (prev_dir == :up or prev_dir == :stop or order_floor == @bottom) &&
+                order_direction == :hall_up ->
+              Driver.set_order_button_light(order_direction, floor, :off)
+              Driver.set_motor_direction(:stop)
+              open_door(order)
+
+            true ->
+              IO.puts("No match for this floor")
+          end
+
+          cond do
+            floor < order_floor && (prev_dir == :up or prev_dir == :stop) ->
+              move_up()
+
+            floor > order_floor && (prev_dir == :down or prev_dir == :stop) ->
+              move_down()
+
+            floor == @bottom &&
+                (prev_dir == :stop or order_direction == :hall_up or
+                   (order_direction == :cab and floor < order_floor)) ->
+              move_up()
+
+            floor == @top &&
+                (prev_dir == :stop or order_direction == :hall_down or
+                   (order_direction == :cab and floor > order_floor)) ->
+              move_down()
+
+            true ->
+              IO.puts("No direction for this value")
+              # IO.inspect(prev_dir)
+          end
+        end
+      else
+        Driver.set_motor_direction(:stop)
+        IO.inspect("Waiting for new orders")
+        send({:heis1, :"heis1@10.0.0.16"}, node())
+      end
     end
 
     {:keep_state, data, [{:state_timeout, 1000, :waiting_for_orders}]}
@@ -66,75 +119,32 @@ defmodule ElevatorFSM do
   def at_floor(:cast, :up, data) do
     IO.inspect("Moving upwards")
     Driver.set_motor_direction(:up)
+    Direction.set(:up)
     {:next_state, :moving_past_floor, data}
   end
 
   def at_floor(:cast, :down, data) do
     IO.inspect("Moving downwards")
     Driver.set_motor_direction(:down)
+    Direction.set(:down)
     {:next_state, :moving_past_floor, data}
   end
 
-  def at_floor(:cast, :open_door, data) do
-    floor = elem(data, 0)
-    orders = elem(data, 1)
-    [_head | tail] = orders
-    data = {floor, tail}
-
-    IO.inspect(tail, label: "The tail is")
-    IO.inspect(data, label: "The data is")
-    {:next_state, :door_open, data}
-  end
-
-  def at_floor(:cast, {:update_orders, new_orders}, data) do
-    floor = elem(data, 0)
-    orders = new_orders
-    data = {floor, orders}
-    :dets.insert(:disk_storage, {:elev, orders})
-    {:repeat_state, data}
-  end
-
-  def door_open(:enter, _, _data) do
-    Driver.set_door_open_light(:on)
-    IO.inspect("Opening doors")
-    Process.sleep(3000)
-    IO.inspect("Closing doors")
-    Driver.set_door_open_light(:off)
-    OrderHandler.order_handeled()
-    at_floor()
-    :keep_state_and_data
-  end
-
-  def door_open(:state_timeout, :door_open, _data) do
-    :repeat_state_and_data
-  end
-
-  def door_open(:cast, :at_floor, data) do
-    {:next_state, :at_floor, data}
-  end
-
-  def door_open(:cast, {:update_orders, new_orders}, data) do
-    floor = elem(data, 0)
-    orders = new_orders
-    data = {floor, orders}
-    :dets.insert(:disk_storage, {:elev, orders})
-    {:keep_state, data, [{:state_timeout, 100, :door_open}]}
-  end
-
   def moving_past_floor(:enter, _, _data) do
-    IO.inspect("I am moving past a floor")
-    IO.inspect("Checking for orders")
-    orders = OrderHandler.get_orders()
+    # IO.inspect("I am moving past a floor")
+    # IO.inspect("Checking for orders")
+    # orders = OrderHandler.get_orders()
     floor = Driver.get_floor_sensor_state()
-    data = {floor, orders}
+
+    # data = {floor, orders}
 
     if floor == :between_floors do
-      IO.inspect("Between floors")
+      # IO.inspect("Between floors")
       not_at_floor()
     end
 
-    IO.inspect("Current floor is #{floor}")
-    {:keep_state, data, [{:state_timeout, 100, :at_floor}]}
+    # IO.inspect("Current floor is #{floor}")
+    {:keep_state_and_data, [{:state_timeout, 100, :at_floor}]}
   end
 
   def moving_past_floor(:state_timeout, :at_floor, _data) do
@@ -145,28 +155,25 @@ defmodule ElevatorFSM do
     {:next_state, :moving_between_floors, data}
   end
 
-  def moving_past_floor(:cast, {:update_orders, new_orders}, data) do
-    floor = elem(data, 0)
-    orders = new_orders
-    data = {floor, orders}
-    :dets.insert(:disk_storage, {:elev, orders})
-    {:keep_state, data, [{:state_timeout, 100, :at_floor}]}
+  def moving_past_floor(:cast, _, _data) do
+    :repeat_state_and_data
   end
 
   def moving_between_floors(:enter, _, _data) do
-    IO.inspect("I am moving between floors")
-    IO.inspect("Checking for orders")
-    orders = OrderHandler.get_orders()
+    # IO.inspect("I am moving between floors")
+    # IO.inspect("Checking for orders")
+    # orders = OrderHandler.get_orders()
     floor = Driver.get_floor_sensor_state()
-    data = {floor, orders}
+
+    # data = {floor, orders}
 
     if floor != :between_floors do
-      IO.inspect("I have arrived at a floor")
+      # IO.inspect("I have arrived at a floor")
       at_floor()
     end
 
-    IO.inspect("Current floor is #{floor}")
-    {:keep_state, data, [{:state_timeout, 100, :between_floors}]}
+    # IO.inspect("Current floor is #{floor}")
+    {:keep_state_and_data, [{:state_timeout, 100, :between_floors}]}
   end
 
   def moving_between_floors(:state_timeout, :between_floors, _data) do
@@ -180,12 +187,8 @@ defmodule ElevatorFSM do
     {:next_state, :at_floor, data}
   end
 
-  def moving_between_floors(:cast, {:update_orders, new_orders}, data) do
-    floor = elem(data, 0)
-    orders = new_orders
-    data = {floor, orders}
-    :dets.insert(:disk_storage, {:elev, orders})
-    {:keep_state, data, [{:state_timeout, 100, :between_floors}]}
+  def kill_fsm do
+    GenStateMachine.stop(__MODULE__, :normal, :infinity)
   end
 
   def update_orders(new_orders) do
@@ -208,7 +211,11 @@ defmodule ElevatorFSM do
     GenStateMachine.cast(__MODULE__, :not_at_floor)
   end
 
-  defp open_door do
-    GenStateMachine.cast(__MODULE__, :open_door)
+  defp open_door(order) do
+    #    IO.puts("At_floor remove order")
+    Driver.set_door_open_light(:on)
+    OrderHandler.order_handled(order)
+    Process.sleep(3000)
+    Driver.set_door_open_light(:off)
   end
 end

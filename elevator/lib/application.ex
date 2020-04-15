@@ -6,9 +6,9 @@ defmodule Elevator do
   use Application
 
   @impl true
-  def start(_type, _args) do
+  def start(_type, args) do
     # Although we don't use the supervisor name below directly,
     # it can be useful when debugging or introspecting the system.
-    Elevator.Supervisor.start_link(name: Elevator.Supervisor)
+    Elevator.Supervisor.start_link(args, name: Elevator.Supervisor)
   end
 end

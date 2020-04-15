@@ -1,13 +1,13 @@
-defmodule Elevator.MixProject do
+defmodule Ex6.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :elevator,
+      app: :ex62,
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
-      escript: [main_module: Main],
+      escript: [main_module: Ex62],
       deps: deps()
     ]
   end
@@ -15,8 +15,6 @@ defmodule Elevator.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      # Application.start(Elevator, :temporary),
-      # mod: {Elevator, "1"},
       extra_applications: [:logger]
     ]
   end
@@ -24,7 +22,6 @@ defmodule Elevator.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:gen_state_machine, "~> 2.0"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]

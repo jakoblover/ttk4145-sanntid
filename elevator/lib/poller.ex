@@ -9,7 +9,8 @@ defmodule PollerServer do
   end
 
   def button_pressed(order) do
-    OrderHandler.add_request(order)
+    # OrderHandler.add_request(order)
+    OrderHandler.new_order(order)
   end
 end
 
@@ -56,6 +57,7 @@ defmodule ButtonPoller do
           cond do
             Driver.get_order_button_state(order.floor, order.order_type) == 1 and prev_state == 0 ->
               IO.puts("Pressed button #{} type: #{order.order_type}")
+              Driver.set_order_button_light(order.order_type, order.floor, :on)
               PollerServer.button_pressed(order)
 
             Driver.get_order_button_state(order.floor, order.order_type) == 0 and prev_state == 1 ->

@@ -6,6 +6,8 @@ defmodule OrderHandler do
     Process.sleep(500)
     # GenServer.start_link(__MODULE__, {[], []}, name: __MODULE__)
     GenServer.start_link(__MODULE__, name, name: __MODULE__)
+    # IO.inspect(is_atom(__MODULE__))
+    # IO.inspect(__MODULE__, label: "OrderHandler name")
   end
 
   # def init({[], []}) do
@@ -51,9 +53,9 @@ defmodule OrderHandler do
     requests = elem(data, 1)
     name = elem(data, 2)
     requests = requests ++ [request]
-    # IO.inspect(requests, label: "The current requests are")
+    IO.inspect(requests, label: "The current requests are")
     data = {orders, requests, name}
-    Watchdog.new_request(request)
+    # Watchdog.new_request(request)
     # Send request to bid handler
     {:noreply, data}
   end
@@ -86,6 +88,10 @@ defmodule OrderHandler do
 
   def new_order(order) do
     GenServer.cast(__MODULE__, {:new_order, order})
+  end
+
+  def get_bid_from_node(node, order = %Order{}) do
+    GenServer.cast({__MODULE__, node}, {:new_order, order})
   end
 
   def get_orders() do

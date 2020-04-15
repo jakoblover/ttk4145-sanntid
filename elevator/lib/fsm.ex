@@ -50,8 +50,11 @@ defmodule ElevatorFSM do
 
         for x <- 0..(length(orders) - 1) do
           order = elem(Enum.fetch(orders, x), 1)
-          order_floor = elem(order, 0)
-          order_direction = elem(order, 1)
+          # order_floor = elem(order, 0)
+          IO.inspect(orders)
+          order_floor = order.floor
+          # order_direction = elem(order, 1)
+          order_direction = order.order_type
 
           #  IO.inspect(order_floor, label: "Order_floor is")
           #  IO.inspect(order_direction, label: "Order_direction is")
@@ -81,31 +84,31 @@ defmodule ElevatorFSM do
           end
 
           cond do
-            floor < order_floor && (prev_dir == :up or prev_dir == :stop) ->
+            floor < order_floor and (prev_dir == :up or prev_dir == :stop) ->
               move_up()
 
-            floor > order_floor && (prev_dir == :down or prev_dir == :stop) ->
+            floor > order_floor and (prev_dir == :down or prev_dir == :stop) ->
               move_down()
 
-            floor == @bottom &&
-                (prev_dir == :stop or order_direction == :hall_up or
-                   (order_direction == :cab and floor < order_floor)) ->
+            floor == @bottom and order_direction == :cab and floor < order_floor ->
               move_up()
 
-            floor == @top &&
-                (prev_dir == :stop or order_direction == :hall_down or
-                   (order_direction == :cab and floor > order_floor)) ->
+            floor == @top and order_direction == :cab and floor > order_floor ->
               move_down()
 
             true ->
               IO.puts("No direction for this value")
+              Direction.set(:stop)
               # IO.inspect(prev_dir)
           end
         end
       else
         Driver.set_motor_direction(:stop)
+        Direction.set(:stop)
         IO.inspect("Waiting for new orders")
-        send({:heis1, :"heis1@10.0.0.16"}, node())
+        # order = Order.new(2, :hall_down)
+
+        # OrderHandler.get_bid_from_node(:"heis1@10.0.0.16", order) #Sender ordre til seg selv, kan få prog til å gå sakte
       end
     end
 
@@ -214,6 +217,7 @@ defmodule ElevatorFSM do
   defp open_door(order) do
     #    IO.puts("At_floor remove order")
     Driver.set_door_open_light(:on)
+    Driver.set_order_button_light(order.order_type, order.floor, :off)
     OrderHandler.order_handled(order)
     Process.sleep(3000)
     Driver.set_door_open_light(:off)

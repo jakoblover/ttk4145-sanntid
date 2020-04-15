@@ -18,12 +18,18 @@ defmodule Watchdog do
       # {:elev,
       {String.to_atom(name),
        [
-         {2, :hall_down},
-         {2, :hall_up},
-         {1, :cab},
-         {3, :cab},
-         {2, :hall_down},
-         {0, :cab}
+         #  {2, :hall_down},
+         #  {2, :hall_up},
+         #  {1, :cab},
+         #  {3, :cab},
+         #  {2, :hall_down},
+         #  {0, :cab}
+         Order.new(2, :hall_down),
+         # Order.new(2, :hall_up)
+         Order.new(1, :cab)
+         # Order.new(3, :cab),
+         # Order.new(2, :hall_down),
+         # Order.new(0, :cab)
        ]}
     )
 
@@ -40,7 +46,8 @@ defmodule Watchdog do
     # IO.inspect(request, label: "Redistributed order")
     # IO.inspect(data)
 
-    if elem(request, 1) == :cab and Counter.get() == 0 do
+    # if elem(request, 1) == :cab and Counter.get() == 0 do
+    if request.order_type == :cab and Counter.get() == 0 do
       # IO.puts("Cab order")
       Counter.set(1)
       # IO.inspect(data)
@@ -49,7 +56,8 @@ defmodule Watchdog do
       ElevatorFSM.kill_fsm()
     end
 
-    if elem(request, 1) == :hall_down or elem(request, 1) == :hall_up do
+    # if elem(request, 1) == :hall_down or elem(request, 1) == :hall_up do
+    if request.order_type == :hall_down or request.order_type == :hall_up do
       # IO.puts("Bid handler job")
       # new_request(request)
       # Ask Bid handler to redistribute
@@ -60,7 +68,7 @@ defmodule Watchdog do
 
   def handle_cast({:new_request, request}, data) do
     # IO.inspect(request, label: "New request")
-    timer_ref = Process.send_after(self(), {:redistribute, request}, 10000)
+    timer_ref = Process.send_after(self(), {:redistribute, request}, 100_000)
     # IO.inspect(timer_ref)
     data = data ++ [{request, timer_ref}]
     # IO.inspect(data, label: "data")

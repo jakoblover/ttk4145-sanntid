@@ -3,11 +3,11 @@ defmodule Ex6.MixProject do
 
   def project do
     [
-      app: :ex6,
+      app: :ex62,
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
-      escript: [main_module: Ex6],
+      escript: [main_module: Ex62],
       deps: deps()
     ]
   end

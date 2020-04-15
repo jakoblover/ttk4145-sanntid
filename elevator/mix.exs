@@ -7,6 +7,7 @@ defmodule Elevator.MixProject do
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
+      escript: [main_module: Main],
       deps: deps()
     ]
   end
@@ -14,7 +15,8 @@ defmodule Elevator.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {Elevator, []},
+      # Application.start(Elevator, :temporary),
+      # mod: {Elevator, "1"},
       extra_applications: [:logger]
     ]
   end

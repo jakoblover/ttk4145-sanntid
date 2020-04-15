@@ -5,8 +5,8 @@ defmodule Driver do
   @state_map %{:on => 1, :off => 0}
   @direction_map %{:up => 1, :down => 255, :stop => 0}
 
-  def start_link([]) do
-    start_link([{127, 0, 0, 1}, 15657])
+  def start_link([port]) do
+    start_link([{127, 0, 0, 1}, port])
   end
 
   def start_link([address, port]) do
@@ -19,6 +19,7 @@ defmodule Driver do
 
   def init([address, port]) do
     {:ok, socket} = :gen_tcp.connect(address, port, [{:active, false}])
+    # :ok, socket} = :gen_tcp.connect(address, port, active: false, reuseaddr: true)
     {:ok, socket}
   end
 

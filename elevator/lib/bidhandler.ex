@@ -37,6 +37,7 @@ defmodule BidHandler do
 
     IO.inspect(Order.can_handle_order?(order, cab_state))
     cost = CostFunction.calculate(order, cab_state)
+    IO.inspect(cost)
 
     {:reply, cost, data}
   end

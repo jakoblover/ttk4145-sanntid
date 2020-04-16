@@ -4,7 +4,6 @@ defmodule CostFunction do
     # IO.inspect(cab_state)
 
     if Order.can_handle_order?(order, cab_state) do
-      IO.inspect(0)
       0
     else
       IO.inspect(1 + calculate(order, cab_state |> CabState.next()))

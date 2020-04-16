@@ -24,11 +24,27 @@ defmodule Order do
     @order_types |> Enum.map(&all_orders(&1)) |> List.flatten()
   end
 
+  # def can_handle_order?(
+  #       %__MODULE__{floor: floor, order_type: order_type},
+  #       %CabState{floor: floor, direction: direction}
+  #     ) do
+  #   IO.inspect(direction)
+
+  #   case direction do
+  #     :stop -> true
+  #     :down when order_type in [:cab, :hall_down] -> true
+  #     :up when order_type in [:cab, :hall_up] -> true
+  #     _otherwise -> false
+  #   end
+  # end
+
   def can_handle_order?(
-        %__MODULE__{floor: floor, order_type: order_type},
-        %CabState{floor: floor, direction: direction}
+        order = %Order{},
+        cab_state = %CabState{}
       ) do
-    case direction do
+    order_type = order.order_type
+
+    case cab_state.direction do
       :stop -> true
       :down when order_type in [:cab, :hall_down] -> true
       :up when order_type in [:cab, :hall_up] -> true
@@ -36,12 +52,13 @@ defmodule Order do
     end
   end
 
-  def can_handle_order?(
-        %__MODULE__{floor: floor_a},
-        %CabState{floor: floor_b}
-      ) do
-    false
-  end
+  # def can_handle_order?(
+  #       %__MODULE__{floor: floor_a},
+  #       %CabState{floor: floor_b}
+  #     ) do
+  #   IO.inspect("Feil sted")
+  #   false
+  # end
 
   def filter_handleable_orders(orders, cab_state = %CabState{}) do
     orders |> Enum.filter(fn order -> can_handle_order?(order, cab_state) end)

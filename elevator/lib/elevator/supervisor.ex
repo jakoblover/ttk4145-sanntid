@@ -14,7 +14,9 @@ defmodule Elevator.Supervisor do
       {OrderHandler, "heis" <> numb},
       {Counter, 0},
       {Direction, :stop},
-      ElevatorFSM
+      {Floor, 0},
+      ElevatorFSM,
+      BidHandler
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

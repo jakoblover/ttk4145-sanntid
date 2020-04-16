@@ -27,7 +27,7 @@ defmodule Main do
           "send-keys",
           "-t",
           ":0.1",
-          "/home/jacob/Documents/Sanntid/SimElevatorServer --port 15657",
+          "/home/jacobian/bin/SimElevatorServer --port 15657",
           "Enter"
         ])
 
@@ -35,7 +35,7 @@ defmodule Main do
           "send-keys",
           "-t",
           ":0.3",
-          "/home/jacob/Documents/Sanntid/SimElevatorServer --port 15658",
+          "/home/jacobian/bin/SimElevatorServer --port 15658",
           "Enter"
         ])
 
@@ -43,7 +43,7 @@ defmodule Main do
           "send-keys",
           "-t",
           ":0.5",
-          "/home/jacob/Documents/Sanntid/SimElevatorServer --port 15659",
+          "/home/jacobian/bin/SimElevatorServer --port 15659",
           "Enter"
         ])
 

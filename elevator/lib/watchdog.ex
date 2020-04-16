@@ -24,9 +24,9 @@ defmodule Watchdog do
          #  {3, :cab},
          #  {2, :hall_down},
          #  {0, :cab}
-         Order.new(2, :hall_down),
+         # Order.new(2, :hall_down),
          # Order.new(2, :hall_up)
-         Order.new(1, :cab)
+         # Order.new(1, :cab)
          # Order.new(3, :cab),
          # Order.new(2, :hall_down),
          # Order.new(0, :cab)
@@ -123,7 +123,7 @@ defmodule Watchdog do
   def boot_node(node_name, port, tick_time \\ 15000) do
     ip = get_my_ip() |> ip_to_string()
     full_name = node_name <> "@" <> ip
-    {:ok, pid} = Node.start(String.to_atom(full_name), :longnames, tick_time)
+    {:ok, pid} = Node.start(String.to_atom(full_name), :longnames)
     IO.inspect(Node.self())
     IO.inspect(pid)
     Node.set_cookie(Node.self(), :kjeks)

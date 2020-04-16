@@ -44,6 +44,7 @@ defmodule ElevatorFSM do
 
       # IO.inspect(orders, label: "The current orders are")
       # IO.inspect("Current floor is #{floor}")
+      Floor.set(floor)
 
       if length(orders) > 0 do
         IO.inspect("Executing order")
@@ -105,7 +106,7 @@ defmodule ElevatorFSM do
       else
         Driver.set_motor_direction(:stop)
         Direction.set(:stop)
-        IO.inspect("Waiting for new orders")
+        # IO.inspect("Waiting for new orders")
         # order = Order.new(2, :hall_down)
 
         # OrderHandler.get_bid_from_node(:"heis1@10.0.0.16", order) #Sender ordre til seg selv, kan få prog til å gå sakte

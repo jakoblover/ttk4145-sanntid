@@ -35,6 +35,10 @@ defmodule Driver do
     GenServer.cast(__MODULE__, {:set_order_button_light, button_type, floor, state})
   end
 
+  def set_order_button_light(node, button_type, floor, state) do
+    GenServer.cast({__MODULE__, node}, {:set_order_button_light, button_type, floor, state})
+  end
+
   def set_floor_indicator(floor) do
     GenServer.cast(__MODULE__, {:set_floor_indicator, floor})
   end

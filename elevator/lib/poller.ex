@@ -11,7 +11,11 @@ defmodule PollerServer do
   def button_pressed(order) do
     # OrderHandler.add_request(order)
     # IO.inspect(Node.list(), label: "node list")
-    OrderHandler.new_order(order)
+    if order.order_type == :cab do
+      OrderHandler.new_order(order)
+    else
+      BidHandler.distribute(order)
+    end
   end
 end
 
@@ -46,7 +50,7 @@ defmodule ButtonPoller do
   @poll_delay 200
 
   def start_link(order = %Order{}) do
-    IO.puts("Starting poller for floor button #{order.floor} of type #{order.order_type}")
+    # IO.puts("Starting poller for floor button #{order.floor} of type #{order.order_type}")
     Task.start_link(__MODULE__, :poll, [order, 0])
   end
 

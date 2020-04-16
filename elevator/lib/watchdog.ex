@@ -38,7 +38,7 @@ defmodule Watchdog do
   end
 
   def handle_info({:redistribute, request}, data) do
-    # IO.puts("Redistributing order")
+    IO.puts("Redistributing order")
     result = Enum.find(data, &(elem(&1, 0) == request))
     # IO.inspect(request)
     data = List.delete(data, result)
@@ -60,6 +60,7 @@ defmodule Watchdog do
     if request.order_type == :hall_down or request.order_type == :hall_up do
       # IO.puts("Bid handler job")
       # new_request(request)
+      BidHandler.distribute(request)
       # Ask Bid handler to redistribute
     end
 
@@ -152,17 +153,25 @@ defmodule Heartbeat do
 
     {from, ip} =
       case :gen_udp.recv(socket, 100, 1000) do
-        {:ok, {ip, _port, data}} -> {data, Watchdog.ip_to_string(ip)}
-        {:error, _} -> {:error, :could_not_get_ip}
+        {:ok, {ip, _port, data}} ->
+          {data, Watchdog.ip_to_string(ip)}
+
+        {:error, _} ->
+          {:error, :could_not_get_ip}
       end
+
+    # IO.inspect(from, label: "From")
 
     if is_binary(ip) do
       nodename = (to_string(from) <> "@" <> ip) |> String.to_atom()
       Node.ping(nodename)
 
-      if length(Node.list()) == 0 do
-        send({String.to_atom(to_string(from)), nodename}, node())
-      end
+      # if length(Node.list()) == 0 do
+      #   IO.inspect(String.to_atom(to_string(from)), label: "from")
+      #   IO.inspect(nodename, label: "nodename")
+      #   send({String.to_atom(to_string(from)), nodename}, node())
+      #   Process.sleep(1000)
+      # end
     else
       IO.puts("No nodes detected")
     end

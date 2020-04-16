@@ -137,7 +137,7 @@ defmodule ElevatorFSM do
         # order = Order.new(2, :hall_down)
         # OrderHandler.new_order(:"heis1@10.0.0.16", order)
         # IO.inspect(Node.list(), label: "Nodes FSM 2")
-        BidHandler.get_bids_on_order(Order.new(2, :hall_down))
+        # BidHandler.get_bids_on_order(Order.new(2, :hall_down))
       end
     end
 
@@ -245,8 +245,26 @@ defmodule ElevatorFSM do
 
   defp open_door(order) do
     #    IO.puts("At_floor remove order")
+
+    if order.order_type == :cab do
+      Driver.set_order_button_light(order.order_type, order.floor, :off)
+    else
+      nodes = Network.all_nodes()
+
+      nodes
+      |> Enum.map(fn node ->
+        Driver.set_order_button_light(node, order.order_type, order.floor, :off)
+
+        IO.inspect(
+          "[FSM] Clearing order lights " <>
+            to_string(order.order_type) <>
+            " on floor " <> to_string(order.floor) <> " on node " <> Atom.to_string(node)
+        )
+      end)
+    end
+
     Driver.set_door_open_light(:on)
-    Driver.set_order_button_light(order.order_type, order.floor, :off)
+    ## Driver.set_order_button_light(node, order.order_type, order.floor, :off)
     OrderHandler.order_handled(order)
     Process.sleep(3000)
     Driver.set_door_open_light(:off)

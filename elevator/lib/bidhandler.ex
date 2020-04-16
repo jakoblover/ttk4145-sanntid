@@ -1,6 +1,6 @@
 defmodule BidHandler do
   use GenServer
-  @timeout 100
+  @timeout 500
 
   # Initialization and startup functions
 
@@ -22,6 +22,8 @@ defmodule BidHandler do
   end
 
   def get_bid_from_node(node, order = %Order{}) do
+    IO.inspect(node)
+    IO.inspect(order)
     GenServer.call({__MODULE__, node}, {:get_bid, order}, @timeout)
   end
 
@@ -29,8 +31,17 @@ defmodule BidHandler do
 
   # Server API
   def handle_call({:get_bid, order}, _from, data) do
-    {:reply, CostFunction.calculate(order, %CabState{}), data}
+    IO.inspect(Floor.get())
+    IO.inspect(Direction.get())
+    cab_state = CabState.new(Floor.get(), Direction.get())
+
+    IO.inspect(Order.can_handle_order?(order, cab_state))
+    cost = CostFunction.calculate(order, cab_state)
+
+    {:reply, cost, data}
   end
 
   # END Server API
 end
+
+# BidHandler.get_bids_on_order(Order.new(2,:hall_down))

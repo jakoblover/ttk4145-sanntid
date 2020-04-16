@@ -90,7 +90,7 @@ defmodule OrderHandler do
     GenServer.cast(__MODULE__, {:new_order, order})
   end
 
-  def get_bid_from_node(node, order = %Order{}) do
+  def new_order(node, order = %Order{}) do
     GenServer.cast({__MODULE__, node}, {:new_order, order})
   end
 

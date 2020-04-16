@@ -19,6 +19,9 @@ defmodule ElevatorFSM do
   end
 
   def at_floor(:enter, _, data) do
+    # IO.inspect(Node.list(), label: "Nodes fsm")
+    # Nodes.set(Node.list())
+    # IO.inspect(Nodes.get())
     floor = elem(data, 0)
     # IO.inspect(floor)ast mon
     Driver.set_floor_indicator(floor)
@@ -46,7 +49,27 @@ defmodule ElevatorFSM do
       # IO.inspect("Current floor is #{floor}")
       Floor.set(floor)
 
-      if length(orders) > 0 do
+      if length(orders) == 1 do
+        order = elem(Enum.fetch(orders, 0), 1)
+        IO.inspect(order, label: "Only one order")
+        order_floor = order.floor
+        order_direction = order.order_type
+
+        cond do
+          floor == order_floor ->
+            Driver.set_order_button_light(order_direction, floor, :off)
+            Driver.set_motor_direction(:stop)
+            open_door(order)
+
+          floor < order_floor ->
+            move_up()
+
+          floor > order_floor ->
+            move_down()
+        end
+      end
+
+      if length(orders) > 1 do
         IO.inspect("Executing order")
 
         for x <- 0..(length(orders) - 1) do
@@ -106,10 +129,15 @@ defmodule ElevatorFSM do
       else
         Driver.set_motor_direction(:stop)
         Direction.set(:stop)
+        # BidHandler.get_bids_on_order(Order.new(2, :hall_down))
         # IO.inspect("Waiting for new orders")
-        # order = Order.new(2, :hall_down)
 
-        # OrderHandler.get_bid_from_node(:"heis1@10.0.0.16", order) #Sender ordre til seg selv, kan få prog til å gå sakte
+        # Sender ordre til seg selv, kan få prog til å gå sakte
+        # IO.inspect(Node.list(), label: "Nodes FSM 2")
+        # order = Order.new(2, :hall_down)
+        # OrderHandler.new_order(:"heis1@10.0.0.16", order)
+        # IO.inspect(Node.list(), label: "Nodes FSM 2")
+        BidHandler.get_bids_on_order(Order.new(2, :hall_down))
       end
     end
 

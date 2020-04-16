@@ -10,6 +10,7 @@ defmodule PollerServer do
 
   def button_pressed(order) do
     # OrderHandler.add_request(order)
+    # IO.inspect(Node.list(), label: "node list")
     OrderHandler.new_order(order)
   end
 end

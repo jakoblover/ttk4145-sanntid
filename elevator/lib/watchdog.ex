@@ -157,7 +157,12 @@ defmodule Heartbeat do
       end
 
     if is_binary(ip) do
-      (to_string(from) <> "@" <> ip) |> String.to_atom() |> Node.ping()
+      nodename = (to_string(from) <> "@" <> ip) |> String.to_atom()
+      Node.ping(nodename)
+
+      if length(Node.list()) == 0 do
+        send({String.to_atom(to_string(from)), nodename}, node())
+      end
     else
       IO.puts("No nodes detected")
     end

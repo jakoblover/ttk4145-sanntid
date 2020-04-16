@@ -16,7 +16,7 @@ defmodule Elevator.MixProject do
   def application do
     [
       # Application.start(Elevator, :temporary),
-      mod: {Elevator, "1"},
+      # mod: {Elevator, "1"},
       extra_applications: [:logger]
     ]
   end

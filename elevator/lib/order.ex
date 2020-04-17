@@ -24,6 +24,10 @@ defmodule Order do
     @order_types |> Enum.map(&all_orders(&1)) |> List.flatten()
   end
 
+  def get_max_floor() do
+    @num_floors
+  end
+
   # def can_handle_order?(
   #       %__MODULE__{floor: floor, order_type: order_type},
   #       %CabState{floor: floor, direction: direction}

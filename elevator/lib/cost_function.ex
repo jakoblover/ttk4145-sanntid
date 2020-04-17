@@ -1,4 +1,6 @@
 defmodule CostFunction do
+  require Order
+
   def calculate(order = %Order{}, cab_state = %CabState{}) do
     # IO.inspect(order)
     # IO.inspect(cab_state)
@@ -10,20 +12,20 @@ defmodule CostFunction do
     #   1 + calculate(order, CabState.next(cab_state))
     # end
     # cost = 0
-    cost = abs(order.floor - cab_state.floor)
+    # cost = abs(order.floor - cab_state.floor)
 
     cond do
-      cab_state.direction == :stop ->
-        cost - 1
+      # cab_state.direction == :stop ->
+      #   abs(order.floor - cab_state.floor)
 
       order.order_type == :hall_up and cab_state.direction == :down ->
-        (cost + 1) * 2
+        cab_state.floor + order.floor
 
       order.order_type == :hall_down and cab_state.direction == :up ->
-        (cost + 1) * 2
+        Order.get_max_floor() - cab_state.floor + (Order.get_max_floor() - order.floor)
 
       true ->
-        cost
+        abs(order.floor - cab_state.floor)
     end
 
     # cost += abs(order.floor - cab_state.floor)

@@ -29,7 +29,7 @@ defmodule OrderHandler do
     requests = elem(data, 1)
     name = elem(data, 2)
     orders = orders ++ [order]
-    # IO.inspect(orders, label: "The current orders are")
+    IO.inspect(orders, label: "The current orders are")
     data = {orders, requests, name}
     Watchdog.new_request(order)
     {:noreply, data}
@@ -53,7 +53,7 @@ defmodule OrderHandler do
     requests = elem(data, 1)
     name = elem(data, 2)
     requests = requests ++ [request]
-    IO.inspect(requests, label: "The current requests are")
+    # IO.inspect(requests, label: "The current requests are")
     data = {orders, requests, name}
     # Watchdog.new_request(request)
     # Send request to bid handler

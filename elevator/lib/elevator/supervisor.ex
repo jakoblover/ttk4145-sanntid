@@ -16,6 +16,7 @@ defmodule Elevator.Supervisor do
       {Direction, :stop},
       {Floor, 0},
       {Nodes, []},
+      {Door, :closed},
       ElevatorFSM,
       BidHandler
     ]

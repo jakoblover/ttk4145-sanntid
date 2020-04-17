@@ -18,14 +18,14 @@ defmodule BidHandler do
   # User API
   def distribute(order) do
     bids = get_bids_on_order(order)
-    IO.inspect(bids, label: "Got bids")
+    # IO.inspect(bids, label: "Got bids")
     node = get_best_bid(bids)
-    IO.inspect(node, label: "Got best bid from this node")
+    # IO.inspect(node, label: "Got best bid from this node")
     OrderHandler.new_order(node, order)
   end
 
   def get_bids_on_order(order) do
-    IO.inspect(Node.list(), label: "node list bidhandler")
+    # IO.inspect(Node.list(), label: "node list bidhandler")
     nodes = Network.all_nodes()
 
     all_bids = nodes |> Enum.map(fn node -> get_bid_from_node(node, order) end)
@@ -41,7 +41,7 @@ defmodule BidHandler do
 
   def get_best_bid(bids) do
     node = bids |> Enum.min_by(fn {_k, v} -> v end) |> elem(0)
-    IO.inspect(node)
+    # IO.inspect(node)
   end
 
   # END User API
@@ -55,7 +55,7 @@ defmodule BidHandler do
     # IO.inspect(Order.can_handle_order?(order, cab_state))
     cost = {node, CostFunction.calculate(order, cab_state)}
 
-    IO.inspect(cost)
+    # IO.inspect(cost)
 
     {:reply, cost, data}
   end

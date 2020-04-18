@@ -3,31 +3,29 @@ defmodule ElevatorFSM do
   require Driver
   @top 3
   @bottom 0
-  # data = {floor, [{order_floor, order_type}]}
+  # data = {floor, [{order.floor, order.order_type}]}
   # Start the server
   def start_link([]) do
     IO.puts("I am booting")
     Process.sleep(500)
-    Counter.set(0)
+    Agents.Counter.set(0)
+    floor = Driver.get_floor_sensor_state()
+    Driver.set_floor_indicator(floor)
 
     {:ok, _pid} =
       GenStateMachine.start_link(
         ElevatorFSM,
-        {:at_floor, {Driver.get_floor_sensor_state(), []}},
+        {:at_floor, {floor, []}},
         name: __MODULE__
       )
   end
 
   def at_floor(:enter, _, data) do
-    # IO.inspect(Node.list(), label: "Nodes fsm")
-    # Nodes.set(Node.list())
-    # IO.inspect(Nodes.get())
     floor = elem(data, 0)
-    # IO.inspect(floor)ast mon
-    # Driver.set_floor_indicator(floor)
     orders = OrderHandler.get_orders()
+    # orders = []
     data = {floor, orders}
-    prev_dir = Direction.get()
+    prev_dir = Agents.Direction.get()
 
     if floor == :between_floors do
       cond do
@@ -42,16 +40,10 @@ defmodule ElevatorFSM do
           move_up()
       end
     else
-      # IO.inspect("Entering at_floor mode")
-      # IO.inspect("Checking for orders")
-
-      # IO.inspect(orders, label: "The current orders are")
-      # IO.inspect("Current floor is #{floor}")
-      Floor.set(floor)
+      Agents.Floor.set(floor)
 
       if length(orders) == 1 do
         order = elem(Enum.fetch(orders, 0), 1)
-        # IO.inspect(order, label: "Only one order")
         order_floor = order.floor
         order_direction = order.order_type
 
@@ -70,18 +62,10 @@ defmodule ElevatorFSM do
       end
 
       if length(orders) > 1 do
-        # IO.inspect("Executing order")
-
         for x <- 0..(length(orders) - 1) do
           order = elem(Enum.fetch(orders, x), 1)
-          # order_floor = elem(order, 0)
-          # IO.inspect(orders)
           order_floor = order.floor
-          # order_direction = elem(order, 1)
           order_direction = order.order_type
-
-          #  IO.inspect(order_floor, label: "Order_floor is")
-          #  IO.inspect(order_direction, label: "Order_direction is")
 
           cond do
             floor == order_floor && order_direction == :cab ->
@@ -99,13 +83,13 @@ defmodule ElevatorFSM do
             floor == order_floor &&
               (prev_dir == :up or prev_dir == :stop or order_floor == @bottom) &&
                 order_direction == :hall_up ->
+              :stop
               Driver.set_order_button_light(order_direction, floor, :off)
               Driver.set_motor_direction(:stop)
               open_door(order, orders)
 
             true ->
               nil
-              # IO.puts("No match for this floor")
           end
 
           cond do
@@ -122,26 +106,14 @@ defmodule ElevatorFSM do
               move_down()
 
             true ->
-              # IO.puts("No direction for this value")
-              Direction.set(:stop)
-              # IO.inspect(prev_dir)
+              Agents.Direction.set(:stop)
           end
         end
       else
-        if Direction.get() != :stop do
+        if Agents.Direction.get() != :stop do
           Driver.set_motor_direction(:stop)
-          Direction.set(:stop)
+          Agents.Direction.set(:stop)
         end
-
-        # BidHandler.get_bids_on_order(Order.new(2, :hall_down))
-        # IO.inspect("Waiting for new orders")
-
-        # Sender ordre til seg selv, kan få prog til å gå sakte
-        # IO.inspect(Node.list(), label: "Nodes FSM 2")
-        # order = Order.new(2, :hall_down)
-        # OrderHandler.new_order(:"heis1@10.0.0.16", order)
-        # IO.inspect(Node.list(), label: "Nodes FSM 2")
-        # BidHandler.get_bids_on_order(Order.new(2, :hall_down))
       end
     end
 
@@ -153,33 +125,27 @@ defmodule ElevatorFSM do
   end
 
   def at_floor(:cast, :up, data) do
-    IO.inspect("Moving upwards")
+    # IO.inspect("Moving upwards")
     Driver.set_motor_direction(:up)
-    Direction.set(:up)
+    Agents.Direction.set(:up)
     {:next_state, :moving_past_floor, data}
   end
 
   def at_floor(:cast, :down, data) do
-    IO.inspect("Moving downwards")
+    # IO.inspect("Moving downwards")
     Driver.set_motor_direction(:down)
-    Direction.set(:down)
+    Agents.Direction.set(:down)
     {:next_state, :moving_past_floor, data}
   end
 
   def moving_past_floor(:enter, _, _data) do
-    # IO.inspect("I am moving past a floor")
-    # IO.inspect("Checking for orders")
-    # orders = OrderHandler.get_orders()
     floor = Driver.get_floor_sensor_state()
-
-    # data = {floor, orders}
+    Agents.Door.set(:closed)
 
     if floor == :between_floors do
-      # IO.inspect("Between floors")
       not_at_floor()
     end
 
-    # IO.inspect("Current floor is #{floor}")
     {:keep_state_and_data, [{:state_timeout, 100, :at_floor}]}
   end
 
@@ -196,19 +162,12 @@ defmodule ElevatorFSM do
   end
 
   def moving_between_floors(:enter, _, _data) do
-    # IO.inspect("I am moving between floors")
-    # IO.inspect("Checking for orders")
-    # orders = OrderHandler.get_orders()
     floor = Driver.get_floor_sensor_state()
 
-    # data = {floor, orders}
-
     if floor != :between_floors do
-      # IO.inspect("I have arrived at a floor")
       at_floor()
     end
 
-    # IO.inspect("Current floor is #{floor}")
     {:keep_state_and_data, [{:state_timeout, 100, :between_floors}]}
   end
 
@@ -249,38 +208,43 @@ defmodule ElevatorFSM do
   end
 
   defp open_door(order, orders) do
-    #    IO.puts("At_floor remove order")
+    # if order.order_type == :cab do
+    #   Driver.set_order_button_light(order.order_type, order.floor, :off)
+    # else
+    #   nodes = Network.all_nodes()
 
-    if order.order_type == :cab do
-      Driver.set_order_button_light(order.order_type, order.floor, :off)
-    else
-      nodes = Network.all_nodes()
+    #   nodes
+    #   |> Enum.map(fn node ->
+    #     Driver.set_order_button_light(node, order.order_type, order.floor, :off)
+    #   end)
+    # end
 
-      nodes
-      |> Enum.map(fn node ->
-        Driver.set_order_button_light(node, order.order_type, order.floor, :off)
-
-        # IO.inspect(
-        #   "[FSM] Clearing order lights " <>
-        #     to_string(order.order_type) <>
-        #     " on floor " <> to_string(order.floor) <> " on node " <> Atom.to_string(node)
-        # )
-      end)
-    end
-
-    if Door.get() == :closed do
+    if Agents.Door.get() == :closed do
       IO.inspect("Opening door")
       Driver.set_door_open_light(:on)
-      OrderHandler.order_handled(order)
-      IO.inspect(orders, label: "Current orders are")
+      IO.inspect("The current orders are:")
+
+      orders
+      |> Enum.map(fn order ->
+        IO.inspect(to_string(order.floor) <> " , " <> to_string(order.order_type))
+      end)
+
       Process.sleep(3000)
-      Door.set(:open)
+      OrderHandler.order_handled(order)
+
+      IO.inspect(to_string(order.floor) <> " , " <> to_string(order.order_type),
+        label: "Cleared order"
+      )
+
+      Agents.Door.set(:open)
       IO.inspect("Closing door")
       Driver.set_door_open_light(:off)
     else
       OrderHandler.order_handled(order)
-      IO.inspect("[FSM] Duplicate orders on same " <> to_string(order.floor))
-      Door.set(:closed)
+
+      IO.inspect(to_string(order.floor) <> " , " <> to_string(order.order_type),
+        label: "Cleared order"
+      )
     end
   end
 end

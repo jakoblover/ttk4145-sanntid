@@ -1,40 +1,40 @@
 defmodule CostFunction do
   require Order
 
-  def calculate(order = %Order{}, cab_state = %CabState{}) do
-    # IO.inspect(order)
-    # IO.inspect(cab_state)
+  def calculate(order = %Order{}, numb_orders, cab_state = %CabState{}) do
+    # IO.inspect("Entering calculate")
+    # IO.inspect(node, label: "node")
 
-    # if Order.can_handle_order?(order, cab_state) do
-    #   0
-    # else
-    #   IO.inspect(1 + calculate(order, CabState.next(cab_state)))
-    #   1 + calculate(order, CabState.next(cab_state))
+    # try do
+    #   IO.inspect(length(OrderHandler.get_orders(node)), label: "There are this many orders")
+    # rescue
+    #   e in ArgumentError -> IO.inspect(e, label: "Error")
     # end
-    # cost = 0
-    # cost = abs(order.floor - cab_state.floor)
 
     cond do
-      # cab_state.direction == :stop ->
-      #   abs(order.floor - cab_state.floor)
+      cab_state.direction == :stop and numb_orders == 0 ->
+        # IO.inspect("Cost is 0")
+        0
 
       order.order_type == :hall_up and cab_state.direction == :down ->
-        cab_state.floor + order.floor
+        # IO.inspect("Cost up vs down")
+        # IO.inspect(cab_state.floor + order.floor, label: "Cost is")
+        cab_state.floor + order.floor + numb_orders
 
       order.order_type == :hall_down and cab_state.direction == :up ->
-        Order.get_max_floor() - cab_state.floor + (Order.get_max_floor() - order.floor)
+        # IO.inspect("Cost down vs up")
+        # IO.inspect(
+        #   Order.get_max_floor() - cab_state.floor + (Order.get_max_floor() - order.floor),
+        #   label: "Cost is"
+        # )
+
+        Order.get_max_floor() - cab_state.floor + (Order.get_max_floor() - order.floor) +
+          numb_orders
 
       true ->
-        abs(order.floor - cab_state.floor)
+        # IO.inspect("Cost neutral")
+        # IO.inspect(abs(order.floor - cab_state.floor), label: "Cost is")
+        abs(order.floor - cab_state.floor) + numb_orders
     end
-
-    # cost += abs(order.floor - cab_state.floor)
-
-    # if order.floor == cab_state.floor do
-    #   0
-    # else
-    #   IO.inspect(1 + calculate(order, CabState.next(cab_state)))
-    #   1 + calculate(order, CabState.next(cab_state))
-    # end
   end
 end

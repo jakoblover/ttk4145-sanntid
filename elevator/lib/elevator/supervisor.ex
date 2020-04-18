@@ -12,11 +12,11 @@ defmodule Elevator.Supervisor do
       Poller,
       {Watchdog, {6800, "heis" <> numb}},
       {OrderHandler, "heis" <> numb},
-      {Counter, 0},
-      {Direction, :stop},
-      {Floor, 0},
+      {Agents.Counter, 0},
+      {Agents.Direction, :stop},
+      {Agents.Floor, 0},
       {Nodes, []},
-      {Door, :closed},
+      {Agents.Door, :closed},
       ElevatorFSM,
       BidHandler
     ]

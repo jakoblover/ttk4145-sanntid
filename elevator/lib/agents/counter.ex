@@ -1,4 +1,4 @@
-defmodule Door do
+defmodule Agents.Counter do
   use Agent
 
   def start_link(initial_value) do
@@ -9,7 +9,7 @@ defmodule Door do
     Agent.get(__MODULE__, & &1)
   end
 
-  def set(door_state) do
-    Agent.update(__MODULE__, &(&1 = door_state))
+  def set(val) do
+    Agent.update(__MODULE__, &(&1 = val))
   end
 end

@@ -1,4 +1,4 @@
-defmodule Direction do
+defmodule Agents.Door do
   use Agent
 
   def start_link(initial_value) do
@@ -9,7 +9,7 @@ defmodule Direction do
     Agent.get(__MODULE__, & &1)
   end
 
-  def set(dir) do
-    Agent.update(__MODULE__, &(&1 = dir))
+  def set(door_state) do
+    Agent.update(__MODULE__, &(&1 = door_state))
   end
 end

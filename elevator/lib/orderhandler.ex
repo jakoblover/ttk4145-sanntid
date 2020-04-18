@@ -1,19 +1,17 @@
 defmodule OrderHandler do
   use GenServer
 
-  # def start_link([]) do
   def start_link(name) do
     Process.sleep(500)
-    # GenServer.start_link(__MODULE__, {[], []}, name: __MODULE__)
     GenServer.start_link(__MODULE__, name, name: __MODULE__)
-    # IO.inspect(is_atom(__MODULE__))
-    # IO.inspect(__MODULE__, label: "OrderHandler name")
   end
 
-  # def init({[], []}) do
   def init(name) do
-    # orders = elem(Enum.at(:dets.lookup(:disk_storage, :elev), 0), 1)
-    orders = elem(Enum.at(:dets.lookup(:disk_storage, String.to_atom(name)), 0), 1)
+    send({:heis1, :"heis1@10.0.0.16"}, node())
+    send({:heis2, :"heis2@10.0.0.16"}, node())
+    orders = elem(Enum.at(:dets.lookup(String.to_atom(name), :elev), 0), 1)
+
+    # IO.inspect(orders, label: "orders")
 
     if(length(orders) > 0) do
       for x <- 0..(length(orders) - 1) do
@@ -29,22 +27,37 @@ defmodule OrderHandler do
     requests = elem(data, 1)
     name = elem(data, 2)
     orders = orders ++ [order]
-    IO.inspect(orders, label: "The current orders are")
+    orders = Enum.uniq(orders)
+
+    IO.inspect(to_string(order.floor) <> " , " <> to_string(order.order_type),
+      label: "I got the order"
+    )
+
+    request_handled(order)
+    Driver.set_order_button_light(order.order_type, order.floor, :on)
     data = {orders, requests, name}
-    Watchdog.new_request(order)
     {:noreply, data}
   end
 
   def handle_cast({:delete_order, order}, data) do
     requests = elem(data, 1)
     name = elem(data, 2)
-    # IO.inspect(order)
-    # IO.inspect(data)
     data = {List.delete(elem(data, 0), order), requests, name}
-    # IO.inspect(data)
+
+    if order.order_type == :cab do
+      Driver.set_order_button_light(order.order_type, order.floor, :off)
+    else
+      nodes = Network.all_nodes()
+
+      nodes
+      |> Enum.map(fn node ->
+        Driver.set_order_button_light(node, order.order_type, order.floor, :off)
+      end)
+    end
+
     Watchdog.order_handled(order)
     orders = elem(data, 0)
-    :dets.insert(:disk_storage, {name, orders})
+    :dets.insert(name, {:elev, orders})
     {:noreply, data}
   end
 
@@ -53,29 +66,35 @@ defmodule OrderHandler do
     requests = elem(data, 1)
     name = elem(data, 2)
     requests = requests ++ [request]
-    # IO.inspect(requests, label: "The current requests are")
     data = {orders, requests, name}
-    # Watchdog.new_request(request)
-    # Send request to bid handler
+    Watchdog.new_request(request)
+
+    if request.order_type == :cab do
+      OrderHandler.new_order(request)
+    else
+      # IO.inspect(request, label: "Request being sent to Bidhandler")
+      BidHandler.distribute(request, length(orders))
+    end
+
     {:noreply, data}
   end
 
-  def handle_cast(:delete_request, data) do
+  def handle_cast({:delete_request, request}, data) do
     orders = elem(data, 0)
-    requests = elem(data, 1)
     name = elem(data, 2)
-    requests = tl(requests)
-    # IO.inspect(requests, label: "The new requests are")
-    data = {orders, requests, name}
+    data = {orders, List.delete(elem(data, 1), request), name}
     {:noreply, data}
   end
 
   def handle_call(:get, _from, data) do
+    # IO.inspect(data, label: "Data")
     orders = elem(data, 0)
-    # IO.puts("Here are the orders")
-    # IO.inspect(orders, label: "The current orders are")
-    # IO.inspect(data, label: "The current data is")
+    # IO.inspect(orders, label: "Getting orders")
     {:reply, orders, data}
+  end
+
+  def can_handle_order(cab_state) do
+    cab_state.direction == :stop and length(get_orders()) == 0
   end
 
   def kill_orderhandler do
@@ -98,11 +117,15 @@ defmodule OrderHandler do
     GenServer.call(__MODULE__, :get)
   end
 
+  # def get_orders(node) do
+  #   GenServer.call({__MODULE__, node}, :get)
+  # end
+
   def add_request(request) do
     GenServer.cast(__MODULE__, {:add_request, request})
   end
 
-  def bid_handled() do
-    GenServer.cast(__MODULE__, :delete_request)
+  def request_handled(request) do
+    GenServer.cast(__MODULE__, {:delete_request, request})
   end
 end

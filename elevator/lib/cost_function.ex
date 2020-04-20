@@ -1,7 +1,7 @@
 defmodule CostFunction do
   require Order
 
-  def calculate(order = %Order{}, numb_orders, cab_state = %CabState{}) do
+  def calculate(order = %Order{}, cab_state = %CabState{}) do
     # IO.inspect("Entering calculate")
     # IO.inspect(node, label: "node")
 
@@ -10,6 +10,8 @@ defmodule CostFunction do
     # rescue
     #   e in ArgumentError -> IO.inspect(e, label: "Error")
     # end
+
+    numb_orders = length(OrderHandler.get_orders())
 
     cond do
       cab_state.direction == :stop and numb_orders == 0 ->

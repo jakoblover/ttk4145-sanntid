@@ -6,7 +6,7 @@ defmodule ElevatorFSM do
   # data = {floor, [{order.floor, order.order_type}]}
   # Start the server
   def start_link([]) do
-    IO.puts("I am booting")
+    # IO.puts("I am booting")
     Process.sleep(500)
     Agents.Counter.set(0)
     floor = Driver.get_floor_sensor_state()

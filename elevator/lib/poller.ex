@@ -7,6 +7,11 @@ defmodule PollerServer do
 
   def button_pressed(order) do
     OrderHandler.add_request(order)
+
+    if order.order_type != :cab do
+      BidHandler.distribute(order)
+    end
+
     # BidHandler.distribute(order)
   end
 end

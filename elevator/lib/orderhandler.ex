@@ -2,22 +2,52 @@ defmodule OrderHandler do
   use GenServer
 
   def start_link(name) do
-    Process.sleep(500)
+    # Process.sleep(500)
     GenServer.start_link(__MODULE__, name, name: __MODULE__)
   end
 
   def init(name) do
-    send({:heis1, :"heis1@10.0.0.16"}, node())
-    send({:heis2, :"heis2@10.0.0.16"}, node())
+    IO.puts("I am booting")
+    # send({:heis1, :"heis1@10.0.0.16"}, node())
+    # send({:heis2, :"heis2@10.0.0.16"}, node())
     orders = elem(Enum.at(:dets.lookup(String.to_atom(name), :elev), 0), 1)
 
-    # IO.inspect(orders, label: "orders")
+    # IO.inspect(:dets.lookup(String.to_atom(name), :elev), label: "Dets")
+    # orders2 = elem(Enum.at(:dets.lookup(:heis2, :elev), 0), 1)
+    # IO.inspect(orders, label: "orders on startup")
+    # IO.inspect(orders2, label: "orders on startup elev 2")
 
-    if(length(orders) > 0) do
-      for x <- 0..(length(orders) - 1) do
-        Watchdog.new_request(elem(Enum.fetch(orders, x), 1))
-      end
-    end
+    # if(length(orders) > 0) do
+    #   nodes = Network.all_nodes()
+
+    #   # nodes
+    #   # |> Enum.map(fn node ->
+    #   #   Orders |> Enum.map(fn order -> Watchdog.new_request(node, order) end)
+    #   # end)
+
+    #   for node <- nodes, order <- orders do
+    #     if order.order_type == :cab do
+    #       IO.inspect(node, label: "Node")
+    #       IO.inspect(order, label: "Order")
+    #       Watchdog.order_handled(order)
+    #       Watchdog.new_request(order)
+    #     else
+    #       IO.inspect(node, label: "Node")
+    #       IO.inspect(order, label: "Order")
+    #       Watchdog.order_handled(node, order)
+    #       Watchdog.new_request(node, order)
+    #     end
+    #   end
+
+    #   # orders |> Enum.map(fn order -> )
+    #   # nodes |> Enum.map(fn node -> Watchdog.new_request(node, order) end)
+    #   # nodes |> Enum.map(fn node -> )
+    #   # for x <- 0..(length(orders) - 1) do
+    #   #   nodes |> Enum.map(fn node -> Watchdog.new_request(node, order) end)
+    #   #   Watchdog.order_handled(node, order)
+    #   #   Watchdog.new_request(elem(Enum.fetch(orders, x), 1))
+    #   # end
+    # end
 
     {:ok, {orders, [], String.to_atom(name)}}
   end
@@ -26,14 +56,18 @@ defmodule OrderHandler do
     orders = elem(data, 0)
     requests = elem(data, 1)
     name = elem(data, 2)
+    # IO.inspect(name, label: "Name")
     orders = orders ++ [order]
     orders = Enum.uniq(orders)
+
+    # IO.inspect(orders, label: "Orders in new orders")
 
     IO.inspect(to_string(order.floor) <> " , " <> to_string(order.order_type),
       label: "I got the order"
     )
 
     request_handled(order)
+    :dets.insert(name, {:elev, orders})
     Driver.set_order_button_light(order.order_type, order.floor, :on)
     data = {orders, requests, name}
     {:noreply, data}
@@ -43,19 +77,19 @@ defmodule OrderHandler do
     requests = elem(data, 1)
     name = elem(data, 2)
     data = {List.delete(elem(data, 0), order), requests, name}
+    nodes = Network.all_nodes()
 
     if order.order_type == :cab do
       Driver.set_order_button_light(order.order_type, order.floor, :off)
     else
-      nodes = Network.all_nodes()
-
       nodes
       |> Enum.map(fn node ->
         Driver.set_order_button_light(node, order.order_type, order.floor, :off)
       end)
     end
 
-    Watchdog.order_handled(order)
+    nodes |> Enum.map(fn node -> Watchdog.order_handled(node, order) end)
+    # Watchdog.order_handled(order)
     orders = elem(data, 0)
     :dets.insert(name, {:elev, orders})
     {:noreply, data}
@@ -66,15 +100,22 @@ defmodule OrderHandler do
     requests = elem(data, 1)
     name = elem(data, 2)
     requests = requests ++ [request]
+    requests = Enum.uniq(requests)
     data = {orders, requests, name}
-    Watchdog.new_request(request)
+
+    # if Enum.member?(requests, request) && length(requests) > 1 do
+    #   IO.inspect(request, label: "Repeat request")
+    # else
+    nodes = Network.all_nodes()
+    nodes |> Enum.map(fn node -> Watchdog.new_request(node, request) end)
+
+    # Watchdog.new_request(request)
 
     if request.order_type == :cab do
       OrderHandler.new_order(request)
-    else
-      # IO.inspect(request, label: "Request being sent to Bidhandler")
-      BidHandler.distribute(request, length(orders))
     end
+
+    # end
 
     {:noreply, data}
   end
@@ -87,9 +128,7 @@ defmodule OrderHandler do
   end
 
   def handle_call(:get, _from, data) do
-    # IO.inspect(data, label: "Data")
     orders = elem(data, 0)
-    # IO.inspect(orders, label: "Getting orders")
     {:reply, orders, data}
   end
 
@@ -116,10 +155,6 @@ defmodule OrderHandler do
   def get_orders() do
     GenServer.call(__MODULE__, :get)
   end
-
-  # def get_orders(node) do
-  #   GenServer.call({__MODULE__, node}, :get)
-  # end
 
   def add_request(request) do
     GenServer.cast(__MODULE__, {:add_request, request})

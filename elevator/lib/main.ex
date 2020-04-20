@@ -15,14 +15,23 @@ defmodule Main do
         # System.cmd("tmux", ["split-window", "-h"])
         System.cmd("tmux", ["split-window", "-d"])
         System.cmd("tmux", ["split-window", "-t", ":0.0", "-d"])
-
-        # System.cmd("tmux", ["split-window", "-t", ":0.2", "-d"])
+        System.cmd("tmux", ["split-window", "-t", ":0.1", "-d"])
 
         System.cmd("tmux", ["select-layout", "tiled"])
 
         System.cmd("gnome-terminal", ["--full-screen", "--", "tmux", "attach"])
 
+        # System.cmd("gnome-terminal", ["--", "tmux", "attach"])
+
         Process.sleep(500)
+
+        System.cmd("tmux", [
+          "send-keys",
+          "-t",
+          ":0.4",
+          "cd /home/jacob/Documents/Sanntid",
+          "Enter"
+        ])
 
         System.cmd("tmux", [
           "send-keys",

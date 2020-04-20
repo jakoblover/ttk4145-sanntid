@@ -6,7 +6,7 @@ defmodule Network do
     end
   end
 
-  def get_my_ip do
+  def get_my_ip() do
     {:ok, socket} = :gen_udp.open(6789, active: false, broadcast: true)
     :ok = :gen_udp.send(socket, {255, 255, 255, 255}, 6789, "test packet")
 
@@ -16,10 +16,10 @@ defmodule Network do
         {:error, _} -> {:error, :could_not_get_ip}
       end
 
-    IO.inspect(ip, label: "ip in network")
+    # IO.inspect(ip, label: "ip in network")
 
     if ip == {:error, :could_not_get_ip} do
-      IO.inspect("Error")
+      IO.inspect("Network error")
       :gen_udp.close(socket)
       get_my_ip()
     else

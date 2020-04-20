@@ -21,6 +21,6 @@ defmodule Elevator.Supervisor do
       BidHandler
     ]
 
-    Supervisor.init(children, strategy: :one_for_one)
+    Supervisor.init(children, strategy: :one_for_one, max_restarts: 5)
   end
 end

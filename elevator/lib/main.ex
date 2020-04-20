@@ -1,7 +1,8 @@
 defmodule Main do
 
   @doc """
-  Initializes two simulators and two nodes in a 2x2 tmux environment.
+  This is the entry point for the whole system. It initializes two simulators and
+  two nodes in a 2x2 tmux environment. The entry point for the application can be found in elevator/application.ex
   """
   def main(args) do
     i = hd(args)

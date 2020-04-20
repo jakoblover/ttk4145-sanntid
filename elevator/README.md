@@ -86,3 +86,7 @@ To run the elevator, open any terminal window and run
 ```bash
 mix compile && mix escript.build && ./elevator 0
 ```
+
+## Credits
+GenStateMachine was used for the FSM
+Thank you to Jostein Løwer for the Driver library, and help with functions regarding registering processes, connecting nodes, and polling buttons.

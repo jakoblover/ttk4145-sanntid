@@ -4,9 +4,7 @@ defmodule ElevatorFSM do
   @top 3
   @bottom 0
   # data = {floor, [{order.floor, order.order_type}]}
-  # Start the server
   def start_link([]) do
-    # IO.puts("I am booting")
     Process.sleep(500)
     Agents.Counter.set(0)
     floor = Driver.get_floor_sensor_state()
@@ -23,7 +21,6 @@ defmodule ElevatorFSM do
   def at_floor(:enter, _, data) do
     floor = elem(data, 0)
     orders = OrderHandler.get_orders()
-    # orders = []
     data = {floor, orders}
     prev_dir = Agents.Direction.get()
 
@@ -125,14 +122,12 @@ defmodule ElevatorFSM do
   end
 
   def at_floor(:cast, :up, data) do
-    # IO.inspect("Moving upwards")
     Driver.set_motor_direction(:up)
     Agents.Direction.set(:up)
     {:next_state, :moving_past_floor, data}
   end
 
   def at_floor(:cast, :down, data) do
-    # IO.inspect("Moving downwards")
     Driver.set_motor_direction(:down)
     Agents.Direction.set(:down)
     {:next_state, :moving_past_floor, data}
@@ -208,17 +203,6 @@ defmodule ElevatorFSM do
   end
 
   defp open_door(order, orders) do
-    # if order.order_type == :cab do
-    #   Driver.set_order_button_light(order.order_type, order.floor, :off)
-    # else
-    #   nodes = Network.all_nodes()
-
-    #   nodes
-    #   |> Enum.map(fn node ->
-    #     Driver.set_order_button_light(node, order.order_type, order.floor, :off)
-    #   end)
-    # end
-
     if Agents.Door.get() == :closed do
       IO.inspect("Opening door")
       Driver.set_door_open_light(:on)

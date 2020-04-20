@@ -14,43 +14,32 @@ defmodule Watchdog do
     :dets.open_file(String.to_atom(name), type: :set)
     :dets.open_file(:heis2, type: :set)
 
-    # :dets.insert(String.to_atom(name), {:elev, []})
+    # :dets.insert(String.to_atom(name), {:elev, []}) For testing
 
     boot_node(name, port)
     {:ok, []}
   end
 
   def handle_info({:redistribute, {request, node}}, data) do
-    # Process.sleep(200)
-    # data = Enum.uniq_by(data, fn {request, _} -> request end)
     result = Enum.find(data, &(elem(&1, 0) == request))
     data = List.delete(data, result)
 
     if request.order_type == :cab and node == Node.self() and Agents.Counter.get() == 0 do
-      # IO.inspect(node, label: "Node")
-      # IO.inspect(request, label: "Request")
       IO.inspect("Restarting elevator because of cab order not cleared")
       Agents.Counter.set(1)
       Driver.set_motor_direction(:stop)
-      # Node.disconnect(Node.self())
-      # OrderHandler.kill_orderhandler()
       ElevatorFSM.kill_fsm()
     end
 
     if request.order_type == :hall_down or request.order_type == :hall_up do
-      # IO.inspect(request, label: "Redistributing order")
       BidHandler.distribute(request)
       OrderHandler.add_request(request)
-      # nodes = Network.all_nodes()
-      # nodes |> Enum.map(fn node -> new_request(node, request) end)
     end
 
     {:noreply, data}
   end
 
   def handle_cast({:new_request, {request, node}}, data) do
-    # IO.inspect(node, label: "Node")
-    # IO.inspect(request, label: "Starting timer for request")
     timer_ref = Process.send_after(self(), {:redistribute, {request, node}}, 20000)
     data = data ++ [{request, timer_ref}]
     {:noreply, data}
@@ -59,33 +48,6 @@ defmodule Watchdog do
   def handle_cast({:order_handled, order}, data) do
     if length(data) > 0 do
       remove_requests(data, order)
-
-      # data = Enum.uniq_by(data, fn {order, _} -> order end)
-      # IO.inspect(data, label: "Data before removal")
-
-      # for _x <- 0..(length(data) - 1) do
-      #   # IO.inspect(data, label: "Data before removal")
-
-      #   if Enum.find(data, &(elem(&1, 0) == order)) != nil do
-      #     # data |> Enum.map(fn request -> Enum.find(data, &(elem(&1, 0) == order)) end)
-      #     # results = data |> Enum.map(fn order -> Enum.find(data, &(elem(&1, 0) == order)) end)
-      #     # data = results |> Enum.map(fn result -> List.delete(data, result) end)
-      #     result = Enum.find(data, &(elem(&1, 0) == order))
-      #     data = List.delete(data, result)
-
-      #     # IO.inspect(data, label: "Data after removal")
-
-      #     try do
-      #       timer_ref = elem(result, 1)
-      #       _time_left = Process.cancel_timer(timer_ref)
-      #     rescue
-      #       e in ArgumentError -> IO.inspect(e, label: "Error")
-      #     end
-      #   else
-      #     {:noreply, data}
-      #   end
-      # end
-
       {:noreply, data}
     else
       {:noreply, data}
@@ -127,8 +89,6 @@ defmodule Watchdog do
   end
 
   def boot_node(node_name, port, tick_time \\ 15000) do
-    # IO.inspect(Node.alive?(), label: "Node alive?")
-
     if Node.alive?() do
       "Node is already alive"
     else
@@ -166,26 +126,19 @@ defmodule Heartbeat do
           {:error, :could_not_get_ip}
       end
 
-    # IO.inspect(from, label: "From")
-    # IO.inspect(Node.list(), label: "Nodes")
-
     if is_binary(ip) do
       nodename = (to_string(from) <> "@" <> ip) |> String.to_atom()
       Node.ping(nodename)
-
-      # IO.inspect(Node.alive?(), label: "Node alive?")
 
       if length(Node.list()) == 0 do
         send({:heis1, :"heis1@10.0.0.16"}, node())
         send({:heis2, :"heis2@10.0.0.16"}, node())
       end
     else
-      # send({:heis1, :"heis1@10.0.0.16"}, node())
       IO.puts("No nodes detected")
 
       if length(Node.list()) > 0 do
         Node.disconnect(hd(Node.list()))
-        # IO.inspect(Node.list(), label: "Nodes watchdog")
       end
     end
 

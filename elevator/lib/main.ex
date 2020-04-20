@@ -12,7 +12,6 @@ defmodule Main do
         ])
 
         System.cmd("tmux", ["split-window", "-h"])
-        # System.cmd("tmux", ["split-window", "-h"])
         System.cmd("tmux", ["split-window", "-d"])
         System.cmd("tmux", ["split-window", "-t", ":0.0", "-d"])
         System.cmd("tmux", ["split-window", "-t", ":0.1", "-d"])
@@ -20,8 +19,6 @@ defmodule Main do
         System.cmd("tmux", ["select-layout", "tiled"])
 
         System.cmd("gnome-terminal", ["--full-screen", "--", "tmux", "attach"])
-
-        # System.cmd("gnome-terminal", ["--", "tmux", "attach"])
 
         Process.sleep(500)
 
@@ -48,14 +45,6 @@ defmodule Main do
           "/home/jacob/Documents/Sanntid/SimElevatorServer --port 15658",
           "Enter"
         ])
-
-        # System.cmd("tmux", [
-        #   "send-keys",
-        #   "-t",
-        #   ":0.5",
-        #   "/home/jacob/Documents/Sanntid/SimElevatorServer --port 15659",
-        #   "Enter"
-        # ])
 
         Process.sleep(100)
 
@@ -85,20 +74,7 @@ defmodule Main do
         Application.start(Elevator, :temporary)
         Elevator.start(:normal, i)
 
-        # System.cmd("tmux", [
-        #   "send-keys",
-        #   "-t",
-        #   ":0.4",
-        #   "./elevator 3",
-        #   "Enter"
-        # ])
-
         waiter()
-
-        # i == "3" ->
-        #   Application.start(Elevator, :temporary)
-        #   Elevator.start(:normal, i)
-        #   waiter()
     end
   end
 

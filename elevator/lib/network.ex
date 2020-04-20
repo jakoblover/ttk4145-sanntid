@@ -16,8 +16,6 @@ defmodule Network do
         {:error, _} -> {:error, :could_not_get_ip}
       end
 
-    # IO.inspect(ip, label: "ip in network")
-
     if ip == {:error, :could_not_get_ip} do
       IO.inspect("Network error")
       :gen_udp.close(socket)

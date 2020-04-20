@@ -57,15 +57,10 @@ defmodule ButtonPoller do
         with sensor_state <- Driver.get_order_button_state(order.floor, order.order_type) do
           cond do
             Driver.get_order_button_state(order.floor, order.order_type) == 1 and prev_state == 0 ->
-              # Driver.set_order_button_light(order.order_type, order.floor, :on)
               PollerServer.button_pressed(order)
-
-            # Driver.get_order_button_state(order.floor, order.order_type) == 0 and prev_state == 1 ->
-            # IO.puts("Released button")
 
             true ->
               nil
-              # Nothing interesting happens
           end
 
           poll(order, sensor_state)

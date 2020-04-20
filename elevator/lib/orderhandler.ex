@@ -2,53 +2,12 @@ defmodule OrderHandler do
   use GenServer
 
   def start_link(name) do
-    # Process.sleep(500)
     GenServer.start_link(__MODULE__, name, name: __MODULE__)
   end
 
   def init(name) do
     IO.puts("I am booting")
-    # send({:heis1, :"heis1@10.0.0.16"}, node())
-    # send({:heis2, :"heis2@10.0.0.16"}, node())
     orders = elem(Enum.at(:dets.lookup(String.to_atom(name), :elev), 0), 1)
-
-    # IO.inspect(:dets.lookup(String.to_atom(name), :elev), label: "Dets")
-    # orders2 = elem(Enum.at(:dets.lookup(:heis2, :elev), 0), 1)
-    # IO.inspect(orders, label: "orders on startup")
-    # IO.inspect(orders2, label: "orders on startup elev 2")
-
-    # if(length(orders) > 0) do
-    #   nodes = Network.all_nodes()
-
-    #   # nodes
-    #   # |> Enum.map(fn node ->
-    #   #   Orders |> Enum.map(fn order -> Watchdog.new_request(node, order) end)
-    #   # end)
-
-    #   for node <- nodes, order <- orders do
-    #     if order.order_type == :cab do
-    #       IO.inspect(node, label: "Node")
-    #       IO.inspect(order, label: "Order")
-    #       Watchdog.order_handled(order)
-    #       Watchdog.new_request(order)
-    #     else
-    #       IO.inspect(node, label: "Node")
-    #       IO.inspect(order, label: "Order")
-    #       Watchdog.order_handled(node, order)
-    #       Watchdog.new_request(node, order)
-    #     end
-    #   end
-
-    #   # orders |> Enum.map(fn order -> )
-    #   # nodes |> Enum.map(fn node -> Watchdog.new_request(node, order) end)
-    #   # nodes |> Enum.map(fn node -> )
-    #   # for x <- 0..(length(orders) - 1) do
-    #   #   nodes |> Enum.map(fn node -> Watchdog.new_request(node, order) end)
-    #   #   Watchdog.order_handled(node, order)
-    #   #   Watchdog.new_request(elem(Enum.fetch(orders, x), 1))
-    #   # end
-    # end
-
     {:ok, {orders, [], String.to_atom(name)}}
   end
 
@@ -56,11 +15,8 @@ defmodule OrderHandler do
     orders = elem(data, 0)
     requests = elem(data, 1)
     name = elem(data, 2)
-    # IO.inspect(name, label: "Name")
     orders = orders ++ [order]
     orders = Enum.uniq(orders)
-
-    # IO.inspect(orders, label: "Orders in new orders")
 
     IO.inspect(to_string(order.floor) <> " , " <> to_string(order.order_type),
       label: "I got the order"
@@ -89,7 +45,6 @@ defmodule OrderHandler do
     end
 
     nodes |> Enum.map(fn node -> Watchdog.order_handled(node, order) end)
-    # Watchdog.order_handled(order)
     orders = elem(data, 0)
     :dets.insert(name, {:elev, orders})
     {:noreply, data}
@@ -103,19 +58,12 @@ defmodule OrderHandler do
     requests = Enum.uniq(requests)
     data = {orders, requests, name}
 
-    # if Enum.member?(requests, request) && length(requests) > 1 do
-    #   IO.inspect(request, label: "Repeat request")
-    # else
     nodes = Network.all_nodes()
     nodes |> Enum.map(fn node -> Watchdog.new_request(node, request) end)
-
-    # Watchdog.new_request(request)
 
     if request.order_type == :cab do
       OrderHandler.new_order(request)
     end
-
-    # end
 
     {:noreply, data}
   end

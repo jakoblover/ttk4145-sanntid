@@ -3,7 +3,7 @@ defmodule ElevatorFSM do
   require Driver
   @top 3
   @bottom 0
-  # data = {floor, [{order.floor, order.order_type}]}
+  # data = {floor, [{order.floor, order.order_type}]} The contents of the state variable data
   def start_link([]) do
     Process.sleep(500)
     Agents.Counter.set(0)
@@ -18,6 +18,10 @@ defmodule ElevatorFSM do
       )
   end
 
+  @doc """
+  When the elevator arrives at a floor it will decide if it should open its doors
+  and what the next direction it should head in is
+  """
   def at_floor(:enter, _, data) do
     floor = elem(data, 0)
     orders = OrderHandler.get_orders()
@@ -133,6 +137,10 @@ defmodule ElevatorFSM do
     {:next_state, :moving_past_floor, data}
   end
 
+  @doc """
+  When leaving a floor the elevator will enter this state
+  and will stay until the floor sensor registers as between floors
+  """
   def moving_past_floor(:enter, _, _data) do
     floor = Driver.get_floor_sensor_state()
     Agents.Door.set(:closed)
@@ -156,6 +164,9 @@ defmodule ElevatorFSM do
     :repeat_state_and_data
   end
 
+  @doc """
+  The elevator will stay in this state until the floor sensor registers as at a floor
+  """
   def moving_between_floors(:enter, _, _data) do
     floor = Driver.get_floor_sensor_state()
 
@@ -170,6 +181,9 @@ defmodule ElevatorFSM do
     :repeat_state_and_data
   end
 
+  @doc """
+  Turns on the floor indicator and moves to the at_floor state
+  """
   def moving_between_floors(:cast, :at_floor, data) do
     floor = Driver.get_floor_sensor_state()
     Driver.set_floor_indicator(floor)

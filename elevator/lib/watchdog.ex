@@ -10,9 +10,8 @@ defmodule Watchdog do
   end
 
   @doc """
-  Initializes the watchdog by opening the saved orders from disk
+  Initializes the watchdog by opening the file containing the saved orders on disk
   """
-  @spec init({any, binary}) :: {:ok, []}
   def init({port, name}) do
     :dets.open_file(String.to_atom(name), type: :set)
 

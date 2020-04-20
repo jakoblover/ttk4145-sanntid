@@ -5,6 +5,9 @@ defmodule OrderHandler do
     GenServer.start_link(__MODULE__, name, name: __MODULE__)
   end
 
+  @doc """
+  Initializes the orderhandler by retrieving orders from the file containing the saved orders on disk
+  """
   def init(name) do
     IO.puts("I am booting")
     orders = elem(Enum.at(:dets.lookup(String.to_atom(name), :elev), 0), 1)

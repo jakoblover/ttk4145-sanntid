@@ -1,4 +1,4 @@
-defmodule Agents.Counter do
+defmodule Agents.FSMRestartCounter do
   use Agent
 
   def start_link(initial_value) do

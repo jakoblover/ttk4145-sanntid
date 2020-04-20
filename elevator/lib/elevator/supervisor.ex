@@ -12,16 +12,26 @@ defmodule Elevator.Supervisor do
   @impl true
   def init(numb) do
     children = [
-      {Driver, [15656 + String.to_integer(numb)]}, # For every elevator on the same computer, we increment the port number
-      Poller, # Polls all the buttons on the elevator and communicates with the BidHandler and OrderHandler
-      {Watchdog, {6800, "heis" <> numb}}, # Makes sure all orders are completed
-      {OrderHandler, "heis" <> numb}, # Handles the request list and order list on the current node
-      {Agents.Counter, 0}, # Agent to keep track of how many nodes we have started on our computer
-      {Agents.Direction, :stop}, # Agent to keep track of the direction of travel
-      {Agents.Floor, 0}, # Agent to keep track of current floor
-      {Agents.Door, :closed}, # Agent to keep track of door state
-      ElevatorFSM, # Finite State Machine for the elevator
-      BidHandler # Communicates with other nodes to facilitate which node gets an order
+      # For every elevator on the same computer, we increment the port number
+      {Driver, [15656 + String.to_integer(numb)]},
+      # Polls all the buttons on the elevator and communicates with the BidHandler and OrderHandler
+      Poller,
+      # Makes sure all orders are completed
+      {Watchdog, {6800, "heis" <> numb}},
+      # Handles the request list and order list on the current node
+      {OrderHandler, "heis" <> numb},
+      # Agent which makes sure the elevator is only restarted once when a cab orders is not cleared in time
+      {Agents.FSMRestartCounter, 0},
+      # Agent to keep track of the direction of travel
+      {Agents.Direction, :stop},
+      # Agent to keep track of current floor
+      {Agents.Floor, 0},
+      # Agent to keep track of door state
+      {Agents.Door, :closed},
+      # Finite State Machine for the elevator
+      ElevatorFSM,
+      # Communicates with other nodes to facilitate which node gets an order
+      BidHandler
     ]
 
     Supervisor.init(children, strategy: :one_for_one, max_restarts: 5)

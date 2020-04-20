@@ -28,9 +28,9 @@ defmodule Watchdog do
     result = Enum.find(data, &(elem(&1, 0) == request))
     data = List.delete(data, result)
 
-    if request.order_type == :cab and node == Node.self() and Agents.Counter.get() == 0 do
+    if request.order_type == :cab and node == Node.self() and Agents.FSMRestartCounter.get() == 0 do
       IO.inspect("Restarting elevator because of cab order not cleared")
-      Agents.Counter.set(1)
+      Agents.FSMRestartCounter.set(1)
       Driver.set_motor_direction(:stop)
       ElevatorFSM.kill_fsm()
     end

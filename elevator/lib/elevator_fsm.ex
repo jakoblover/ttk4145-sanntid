@@ -6,7 +6,7 @@ defmodule ElevatorFSM do
   # data = {floor, [{order.floor, order.order_type}]} The contents of the state variable data
   def start_link([]) do
     Process.sleep(500)
-    Agents.Counter.set(0)
+    Agents.FSMRestartCounter.set(0)
     floor = Driver.get_floor_sensor_state()
     Driver.set_floor_indicator(floor)
 

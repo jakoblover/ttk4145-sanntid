@@ -15,7 +15,8 @@ defmodule Watchdog do
   def init({port, name}) do
     :dets.open_file(String.to_atom(name), type: :set)
 
-    # :dets.insert(String.to_atom(name), {:elev, []}) For testing
+    # For testing
+    # :dets.insert(String.to_atom(name), {:elev, []})
 
     boot_node(name, port)
     {:ok, []}

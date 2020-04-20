@@ -62,12 +62,19 @@ Communicates with other nodes to facilitate which node gets an order.
 
 ### Install elixir
 Add Erlang Solutions repo
+
 `wget https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb && sudo dpkg -i erlang-solutions_2.0_all.deb`
+
 Update package manager
+
 `sudo apt-get update`
+
 Install the Erlang/OTP platform and all of its applications
+
 `sudo apt-get install esl-erlang`
+
 Install Elixir
+
 `sudo apt-get install elixir`
 
 ### Install tmux

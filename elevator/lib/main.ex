@@ -1,4 +1,8 @@
 defmodule Main do
+
+  @doc """
+  Initializes two simulators and two nodes in a 2x2 tmux environment.
+  """
   def main(args) do
     i = hd(args)
 

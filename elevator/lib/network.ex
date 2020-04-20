@@ -1,4 +1,7 @@
 defmodule Network do
+  @doc """
+  Returns a list of all the nodes in the cluster
+  """
   def all_nodes do
     case [Node.self() | Node.list()] do
       [:nonode@nohost] -> {:error, :node_not_running}

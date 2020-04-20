@@ -5,6 +5,9 @@ defmodule PollerServer do
     {:ok, {[]}}
   end
 
+  @doc """
+  Acts as an interface between the button presses and the distribution of orders
+  """
   def button_pressed(order) do
     OrderHandler.add_request(order)
 
@@ -12,7 +15,6 @@ defmodule PollerServer do
       BidHandler.distribute(order)
     end
 
-    # BidHandler.distribute(order)
   end
 end
 
@@ -28,6 +30,9 @@ defmodule Poller do
     Supervisor.stop(__MODULE__)
   end
 
+  @doc """
+  Starts a button poller for each possible button we can press
+  """
   @impl true
   def init([]) do
     IO.puts("Initializing button pollers")
@@ -50,6 +55,10 @@ defmodule ButtonPoller do
     Task.start_link(__MODULE__, :poll, [order, 0])
   end
 
+  @doc """
+  Loop that checks the state of the button, and calls upon the PollerServer.button_pressed(order)
+  if a button was pressed.
+  """
   def poll(order, prev_state) do
     receive do
     after

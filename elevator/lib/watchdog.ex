@@ -9,6 +9,9 @@ defmodule Watchdog do
     GenServer.stop(__MODULE__)
   end
 
+  @doc """
+  Initializes the watchdog by opening the saved orders from disk
+  """
   @spec init({any, binary}) :: {:ok, []}
   def init({port, name}) do
     :dets.open_file(String.to_atom(name), type: :set)
@@ -20,6 +23,9 @@ defmodule Watchdog do
     {:ok, []}
   end
 
+  @doc """
+  Redistributes an order to another node
+  """
   def handle_info({:redistribute, {request, node}}, data) do
     result = Enum.find(data, &(elem(&1, 0) == request))
     data = List.delete(data, result)
@@ -39,12 +45,18 @@ defmodule Watchdog do
     {:noreply, data}
   end
 
+  @doc """
+  Starts a timer to watch an order request, and redistributes if not completed within the time limit
+  """
   def handle_cast({:new_request, {request, node}}, data) do
     timer_ref = Process.send_after(self(), {:redistribute, {request, node}}, 20000)
     data = data ++ [{request, timer_ref}]
     {:noreply, data}
   end
 
+  @doc """
+  Removes all requests on a given order if it is completed
+  """
   def handle_cast({:order_handled, order}, data) do
     if length(data) > 0 do
       remove_requests(data, order)
@@ -88,6 +100,11 @@ defmodule Watchdog do
     GenServer.cast({__MODULE__, node}, {:order_handled, order})
   end
 
+  @doc """
+  Starts up a node by registering it as a process with a name on the format "heis<num>@<ip>" where <num>
+  is the elevator number and <ip> is the computer IP (there can be several elevators on one node).
+  It starts a heartbeat that performs a UDP broadcast to discover nodes that should connect to the cluster.
+  """
   def boot_node(node_name, port, tick_time \\ 15000) do
     if Node.alive?() do
       "Node is already alive"
@@ -111,6 +128,9 @@ defmodule Heartbeat do
     Task.start_link(__MODULE__, :run, [data])
   end
 
+  @doc """
+  Connect nodes to our cluster if a node was discovered
+  """
   def run(data) do
     port = elem(data, 1)
     {:ok, socket} = :gen_udp.open(port, active: false, broadcast: true, reuseaddr: true)

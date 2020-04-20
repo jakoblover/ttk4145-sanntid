@@ -1,6 +1,12 @@
 defmodule CostFunction do
   require Order
 
+  @doc """
+  Calculates the bid each elevator sends back to the node that initiated the bid.
+  Elevators standing still with no current orders are prioritized, the rest
+  calculate a bid based on what direction they are currently traveling
+  and their distance away from the target floor.
+  """
   def calculate(order = %Order{}, cab_state = %CabState{}) do
     numb_orders = length(OrderHandler.get_orders())
 

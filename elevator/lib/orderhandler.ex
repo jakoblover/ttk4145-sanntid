@@ -11,6 +11,16 @@ defmodule OrderHandler do
     {:ok, {orders, [], String.to_atom(name)}}
   end
 
+  ###
+  # Server call and cast handles
+  ###
+
+  @doc """
+  Adds a new order to list of orders that should be handled
+  Removes duplicate orders
+  Turns on the respective order light
+  Stores the order to disk
+  """
   def handle_cast({:new_order, order}, data) do
     orders = elem(data, 0)
     requests = elem(data, 1)
@@ -29,6 +39,11 @@ defmodule OrderHandler do
     {:noreply, data}
   end
 
+  @doc """
+  Deletes an order from order list
+  Turns the respective order button light off
+  Tell watchdog the order has been handled
+  """
   def handle_cast({:delete_order, order}, data) do
     requests = elem(data, 1)
     name = elem(data, 2)
@@ -50,6 +65,11 @@ defmodule OrderHandler do
     {:noreply, data}
   end
 
+  @doc """
+  Adds a request for an order to be handled
+  Tells all the watchdogs on all nodes about the new order
+  If the request is a cab order, the current node should handle it immediately
+  """
   def handle_cast({:add_request, request}, data) do
     orders = elem(data, 0)
     requests = elem(data, 1)
@@ -68,6 +88,9 @@ defmodule OrderHandler do
     {:noreply, data}
   end
 
+  @doc """
+  Delete a request for a given order
+  """
   def handle_cast({:delete_request, request}, data) do
     orders = elem(data, 0)
     name = elem(data, 2)
@@ -75,14 +98,17 @@ defmodule OrderHandler do
     {:noreply, data}
   end
 
+  @doc """
+  Fetches all current orders
+  """
   def handle_call(:get, _from, data) do
     orders = elem(data, 0)
     {:reply, orders, data}
   end
 
-  def can_handle_order(cab_state) do
-    cab_state.direction == :stop and length(get_orders()) == 0
-  end
+  ###
+  # Server API
+  ###
 
   def kill_orderhandler do
     GenStateMachine.stop(__MODULE__, :normal, :infinity)

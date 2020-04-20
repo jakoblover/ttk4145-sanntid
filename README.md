@@ -9,7 +9,7 @@ The flow of information during normal operation can be described roughly in pseu
 
 ```
 Boot all modules
-Look for new nodes on the network, and add to our cluster
+Continuously look for new nodes on the network, and add to our cluster
 ButtonPollers poll the Driver
 
 When button is pushed

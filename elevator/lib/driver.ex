@@ -5,8 +5,8 @@ defmodule Driver do
   @state_map %{:on => 1, :off => 0}
   @direction_map %{:up => 1, :down => 255, :stop => 0}
 
-  def start_link([]) do
-    start_link([{127, 0, 0, 1}, 15657])
+  def start_link([port]) do
+    start_link([{127, 0, 0, 1}, port])
   end
 
   def start_link([address, port]) do
@@ -19,6 +19,7 @@ defmodule Driver do
 
   def init([address, port]) do
     {:ok, socket} = :gen_tcp.connect(address, port, [{:active, false}])
+    # :ok, socket} = :gen_tcp.connect(address, port, active: false, reuseaddr: true)
     {:ok, socket}
   end
 
@@ -32,6 +33,10 @@ defmodule Driver do
   # state can be :on/:off
   def set_order_button_light(button_type, floor, state) do
     GenServer.cast(__MODULE__, {:set_order_button_light, button_type, floor, state})
+  end
+
+  def set_order_button_light(node, button_type, floor, state) do
+    GenServer.cast({__MODULE__, node}, {:set_order_button_light, button_type, floor, state})
   end
 
   def set_floor_indicator(floor) do

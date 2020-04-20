@@ -9,8 +9,6 @@ defmodule BidHandler do
   end
 
   def init(_opts) do
-    send({:heis1, :"heis1@10.0.0.16"}, node())
-    send({:heis2, :"heis2@10.0.0.16"}, node())
     {:ok, []}
   end
 

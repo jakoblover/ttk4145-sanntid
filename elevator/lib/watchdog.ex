@@ -130,9 +130,13 @@ defmodule Heartbeat do
       nodename = (to_string(from) <> "@" <> ip) |> String.to_atom()
       Node.ping(nodename)
 
+      # Needed for multiple elevators on same machine
       if length(Node.list()) == 0 do
-        send({:heis1, :"heis1@10.0.0.16"}, node())
-        send({:heis2, :"heis2@10.0.0.16"}, node())
+        if elem(data, 2) == :heis1 do
+          send({:heis2, ("heis2" <> "@" <> ip) |> String.to_atom()}, node())
+        else
+          send({:heis1, ("heis1" <> "@" <> ip) |> String.to_atom()}, node())
+        end
       end
     else
       IO.puts("No nodes detected")

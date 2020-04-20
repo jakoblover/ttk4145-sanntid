@@ -72,10 +72,12 @@ Install Elixir
 
 ### Install tmux
 Assuming you're on Ubuntu/Debian
+
 `apt install tmux`
 
 ### Install elevator simulator
 The elevator can be run as a D simulator found here
+
 https://github.com/TTK4145/Simulator-v2
 
 ### Edit main.ex
@@ -83,6 +85,7 @@ Change the directory of the SimElevatorServer calls to the directory where you d
 
 ## Running the program
 To run the elevator, open any terminal window and run
+
 ```bash
 mix compile && mix escript.build && ./elevator 0
 ```

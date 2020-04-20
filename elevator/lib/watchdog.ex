@@ -15,7 +15,6 @@ defmodule Watchdog do
   @spec init({any, binary}) :: {:ok, []}
   def init({port, name}) do
     :dets.open_file(String.to_atom(name), type: :set)
-    :dets.open_file(:heis2, type: :set)
 
     # :dets.insert(String.to_atom(name), {:elev, []}) For testing
 
@@ -37,7 +36,7 @@ defmodule Watchdog do
       ElevatorFSM.kill_fsm()
     end
 
-    if request.order_type == :hall_down or request.order_type == :hall_up do
+    if request.order_type != :cab do
       BidHandler.distribute(request)
       OrderHandler.add_request(request)
     end

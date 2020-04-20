@@ -26,7 +26,7 @@ Once an order is in the order queue, the FSM will pop off the top element and co
 
 
 ### Modules
-The program consists of several modules. It is written mostly using GenServer calls and casts to more easily facilitate communication across different nodes on the network.  
+The program consists of several modules. It is written mostly using GenServer calls and casts to more easily facilitate communication across different nodes on the network.
 
 #### Driver
 Controls the elevator through a TCP port. Contains all the functions necessary to control all the features on the elevator. We can get and set lights, we can fetch what floor the elevator is on, set motor direction, etc... 
@@ -88,5 +88,6 @@ mix compile && mix escript.build && ./elevator 0
 ```
 
 ## Credits
-GenStateMachine was used for the FSM
+GenStateMachine was used for the FSM.
+
 Thank you to Jostein Løwer for the Driver library, and help with functions regarding registering processes, connecting nodes, and polling buttons.

@@ -20,7 +20,7 @@ defmodule Elevator.Supervisor do
       {Watchdog, {6800, "heis" <> numb}},
       # Handles the request list and order list on the current node
       {OrderHandler, "heis" <> numb},
-      # Agent which makes sure the elevator is only restarted once when a cab orders is not cleared in time
+      # Agent which makes sure the elevator is only restarted once when a cab order is not cleared in time
       {Agents.FSMRestartCounter, 0},
       # Agent to keep track of the direction of travel
       {Agents.Direction, :stop},
